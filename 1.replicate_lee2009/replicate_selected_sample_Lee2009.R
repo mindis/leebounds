@@ -1,19 +1,17 @@
 rm(list=ls())
 library(sas7bdat)
-library(dplyr)
+libry(dplyr)
 library(tidyverse)
 library(SDMTools)
 library(feather)
-args<-commandArgs(TRUE)
 
+# Replace this line with your github folder location
+my_path<-"/net/holyparkesec/data/tata/leebounds/"
 
-in_path<-args[1]
-out_path<-args[2]
-
-key_variables<-read.sas7bdat(paste0(my_path,"/key_vars.sas7bdat"))
-mileston<-read.sas7bdat(paste0(my_path,"/mileston.sas7bdat"))
-baseline<-read.sas7bdat(paste0(my_path,"/baseline.sas7bdat"))
-empl_tl<-read.sas7bdat(paste0(my_path,"/empl_tl.sas7bdat"))  
+key_variables<-read.sas7bdat(paste0(my_path,"/Data/key_vars.sas7bdat"))
+mileston<-read.sas7bdat(paste0(my_path,"/Data/mileston.sas7bdat"))
+baseline<-read.sas7bdat(paste0(my_path,"/Data/baseline.sas7bdat"))
+empl_tl<-read.sas7bdat(paste0(my_path,"/Data/empl_tl.sas7bdat"))  
 
 full_data<-full_join(mileston,key_variables,by=c("MPRID"="MPRID")) %>%
   full_join(baseline,by=c("MPRID"="MPRID"))%>%
@@ -52,4 +50,6 @@ full_data_nona$PERS_INC2<-as.numeric(full_data_nona$PERS_INC==2)
 full_data_nona$PERS_INC3<-as.numeric(full_data_nona$PERS_INC==3)
 full_data_nona$PERS_INC4<-as.numeric(full_data_nona$PERS_INC==4)
 
-write_feather(full_data_nona,paste0(my_path,"/dataLee2009.feather"))
+# too large for Github
+#write_feather(full_data_nona,paste0(my_path,"/Data/dataLee2009.feather"))
+write.table(paste0(my_path,"/Data/dataLee2009.csv"))
