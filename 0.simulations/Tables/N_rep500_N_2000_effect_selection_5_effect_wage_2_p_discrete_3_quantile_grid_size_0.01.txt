@@ -1,0 +1,6 @@
+"","lower_bound","upper_bound"
+"true_value",1.967,2.033
+"bias",0.012,0.022
+"se",0.024,0.025
+"mse",0.001,0.001
+"rej.freq",0.072,0.148
