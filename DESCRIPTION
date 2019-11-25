@@ -1,0 +1,11 @@
+Package: leebounds
+Type: Package
+Title: Nonparametric bounds on Average Treatment Effect in the presence of Endogenous Selection
+Version: 0.1.0
+Author: Vira Semenova
+Maintainer: Vira Semenova <semenovavira@gmail.com>
+Description: This package provides basic (Lee (2009)) and orthogonal (Semenova (2019)) bounds for ATE for Lee (2009) model. Includes JobCorps data from Lee (2009). Various machine learning methods for the first-stage functions are supported.  
+License: GPL
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
