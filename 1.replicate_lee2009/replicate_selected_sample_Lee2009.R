@@ -4,12 +4,16 @@ library(dplyr)
 library(tidyverse)
 library(SDMTools)
 library(feather)
-my_path<-"/Users/virasemenova/Dropbox (MIT)/ReSTUD_JMP_submission/JobCorps_AER_data/"
+args<-commandArgs(TRUE)
 
-key_variables<-read.sas7bdat(paste0(my_path,"key_vars.sas7bdat"))
-mileston<-read.sas7bdat(paste0(my_path,"mileston.sas7bdat"))
-baseline<-read.sas7bdat(paste0(my_path,"baseline.sas7bdat"))
-empl_tl<-read.sas7bdat(paste0(my_path,"empl_tl.sas7bdat"))  
+
+in_path<-args[1]
+out_path<-args[2]
+
+key_variables<-read.sas7bdat(paste0(my_path,"/key_vars.sas7bdat"))
+mileston<-read.sas7bdat(paste0(my_path,"/mileston.sas7bdat"))
+baseline<-read.sas7bdat(paste0(my_path,"/baseline.sas7bdat"))
+empl_tl<-read.sas7bdat(paste0(my_path,"/empl_tl.sas7bdat"))  
 
 full_data<-full_join(mileston,key_variables,by=c("MPRID"="MPRID")) %>%
   full_join(baseline,by=c("MPRID"="MPRID"))%>%
@@ -48,4 +52,4 @@ full_data_nona$PERS_INC2<-as.numeric(full_data_nona$PERS_INC==2)
 full_data_nona$PERS_INC3<-as.numeric(full_data_nona$PERS_INC==3)
 full_data_nona$PERS_INC4<-as.numeric(full_data_nona$PERS_INC==4)
 
-write_feather(full_data_nona,paste0(my_path,"/R_code/dataLee2009.feather"))
+write_feather(full_data_nona,paste0(my_path,"/dataLee2009.feather"))
