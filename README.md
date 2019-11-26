@@ -4,8 +4,8 @@ This package provides various methods to construct bounds on the Average Treatme
 
 # Installation
 ```
-install.packages("leebounds")
-library(leebounds) 
+install.packages("devtools")
+library(devtools) 
 ## this is crucial step instead of standard install_github("vsemenova/leebounds"). The packages contains files > 50Mb, which throws warnings. Using remotes::install_github("vsemenova/leebounds", build = FALSE) ensures correct installation of the package. 
 remotes::install_github("vsemenova/leebounds", build = FALSE)
 library(leebounds)
