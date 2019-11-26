@@ -10,7 +10,7 @@ library(devtools)
 remotes::install_github("vsemenova/leebounds", build = FALSE)
 library(leebounds)
 ```
-# Basic Example
+# Example
 
 
 # Replicating Lee (2008) 
