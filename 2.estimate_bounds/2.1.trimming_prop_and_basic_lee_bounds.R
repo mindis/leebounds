@@ -3,10 +3,10 @@ rm(list=ls())
 #my_path<-"/Users/virasemenova/Dropbox (MIT)/ReSTUD_JMP_submission/JobCorps_AER_data/"
 my_path<-"~"
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
-source(paste0(my_path,"/R_code/leebounds.R"))
-source(paste0(my_path,"/R_code/libraries.R"))
-Lee_data<-read_feather(paste0(my_path,"/R_code/dataLee2009.feather"))
-setwd(paste0(my_path,"/R_code/2.estimate_bounds/"))
+source(paste0(my_path,"/leebounds.R"))
+source(paste0(my_path,"/libraries.R"))
+Lee_data<-read.csv(paste0(my_path,"/Data/dataLee2009.csv"))
+setwd(paste0(my_path,"/2.estimate_bounds/"))
 
 ############ WEIGHTED DATA ###############################
 int_weights<-round(Lee_data$DSGN_WGT.y)
@@ -62,9 +62,9 @@ for (i in 1:length(weeks)) {
 
 
 png("Figures/Trimming_unweighted.png")
-plot(weeks,prop_trim,xlab="Weeks since random assignment",ylab="Trimming proportion",lwd=1,ylim=c(0,2))+
-  abline(a=1,b=0,col="black")+
-  title("Ratio of employment proportion in control to treated group")+
+plot(weeks,prop_trim,xlab="Weeks since random assignment",ylab="Trimming threshold",lwd=3,ylim=c(0,2),type="l")+
+  abline(a=0,b=0,col="black",lwd=2)+
+  title("Trimming threshold")+
   points(x=selected_weeks,y=prop_trim[selected_weeks],col="black",lwd=10)
 dev.off()
 ################## weighted data ###############################
@@ -91,9 +91,9 @@ for (i in 1:length(weeks)) {
 }
 
 png("Figures/Trimming_weighted.png")
-plot(weeks,prop_trim_weighted,xlab="Weeks since random assignment",ylab="Trimming proportion",lwd=1,ylim=c(0.5,2))+
-  abline(a=1,b=0,col="black")+
-  title("Ratio of employment proportion in control to treated group")+
+plot(weeks,prop_trim_weighted,xlab="Weeks since random assignment",ylab="Trimming threshold",lwd=3,type="l",ylim=c(0.5,2))+
+  abline(a=0,b=0,col="black",lwd=2)+
+  title("Trimming threshold")+
   points(x=selected_weeks,y=prop_trim_weighted[selected_weeks],col="black",lwd=10)
 dev.off()
 ####### Step 2. Report unconditional Lee bounds for each week
@@ -122,12 +122,12 @@ for (i in 1:length(weeks)) {
 }
 png("Figures/Basic_Lee_bounds.png")
 plot(weeks,estimated_leebounds[1,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",
-     ylim=c(-1,1))+
-  points(estimated_leebounds[2,],col="green")+
+     ylim=c(-1,1),type="l",lwd=3)+
+  lines(estimated_leebounds[2,],col="blue",lwd=3)+
   title("Lee (2009) bounds")+
-  points(x=selected_weeks,y=estimated_leebounds[1,selected_weeks],col="blue",lwd=10)+
-  points(x=selected_weeks,y=estimated_leebounds[2,selected_weeks],col="green",lwd=10)+
-  abline(a=0,b=0,col="black")
+  points(x=selected_weeks,y=estimated_leebounds[1,selected_weeks],col="black",lwd=10)+
+  points(x=selected_weeks,y=estimated_leebounds[2,selected_weeks],col="black",lwd=10)+
+  abline(a=0,b=0,col="black",lwd=2)
 dev.off()
 
 
@@ -158,13 +158,14 @@ for (i in 1:length(weeks)) {
   estimated_weighted_leebounds[,i]<-GetBounds(leebounds_weighted)
 }
 png("Figures/Basic_weighted_Lee_bounds.png")
-plot(weeks, estimated_weighted_leebounds[1,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",
-     ylim=c(-1,1))+
-  points( estimated_weighted_leebounds[2,],col="green")+
+plot(weeks, estimated_weighted_leebounds[1,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",type="l",
+     ylim=c(-1,1),lwd=3)+
+  lines( estimated_weighted_leebounds[2,],col="blue",lwd=3)+
+  abline(a=0,b=0,col="black",lwd=2)+
   title("Lee (2009) bounds")+
-  points(x=selected_weeks,y= estimated_weighted_leebounds[1,selected_weeks],col="blue",lwd=10)+
-  points(x=selected_weeks,y= estimated_weighted_leebounds[2,selected_weeks],col="green",lwd=10)+
-  abline(a=0,b=0,col="black")
+  points(x=selected_weeks,y= estimated_weighted_leebounds[1,selected_weeks],col="black",lwd=3)+
+  points(x=selected_weeks,y= estimated_weighted_leebounds[2,selected_weeks],col="black",lwd=3)
+  
 dev.off()
 
   

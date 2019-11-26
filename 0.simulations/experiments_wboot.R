@@ -1,12 +1,15 @@
 rm(list=ls())
 #my_path<-"/Users/virasemenova/Dropbox (MIT)/ReSTUD_JMP_submission/JobCorps_AER_data/"
-my_path<-"~"
-#source(paste0(my_path,"/R_code/libraries.R"))
-source(paste0(my_path,"/R_code/leebounds.R"))
-source(paste0(my_path,"/R_code/ortholeebounds.R"))
-source(paste0(my_path,"/R_code/simulate_data.R"))
-source(paste0(my_path,"/R_code/main_simulation.R"))
-source(paste0(my_path,"/R_code/utils.R"))
+#my_path<-"~"
+#source(paste0(my_path,"/libraries.R"))
+my_path<-"/net/holyparkesec/data/tata/leebounds/"
+
+
+source(paste0(my_path,"/leebounds.R"))
+source(paste0(my_path,"/ortholeebounds.R"))
+source(paste0(my_path,"/simulate_data.R"))
+source(paste0(my_path,"/main_simulation.R"))
+source(paste0(my_path,"/utils.R"))
 #install.packages(c("truncnorm","quantreg"))
 library(truncnorm)
 library(quantreg)

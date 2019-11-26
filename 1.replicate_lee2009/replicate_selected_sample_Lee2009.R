@@ -8,6 +8,7 @@ library(feather)
 # Replace this line with your github folder location
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 
+
 key_variables<-read.sas7bdat(paste0(my_path,"/Data/key_vars.sas7bdat"))
 mileston<-read.sas7bdat(paste0(my_path,"/Data/mileston.sas7bdat"))
 baseline<-read.sas7bdat(paste0(my_path,"/Data/baseline.sas7bdat"))
@@ -52,4 +53,4 @@ full_data_nona$PERS_INC4<-as.numeric(full_data_nona$PERS_INC==4)
 
 # too large for Github
 #write_feather(full_data_nona,paste0(my_path,"/Data/dataLee2009.feather"))
-write.table(paste0(my_path,"/Data/dataLee2009.csv"))
+write.csv(full_data_nona,paste0(my_path,"/Data/dataLee2009.csv"))

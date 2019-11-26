@@ -27,17 +27,17 @@ library(expm)
 library(purrr)
 library(hdm)
 
-my_path<-"/Users/virasemenova/Dropbox (MIT)/ReSTUD_JMP_submission/JobCorps_AER_data/"
-my_path<-"/net/holyparkesec/data/tata/Vira/"
+my_path<-"~"
+my_path<-"/net/holyparkesec/data/tata/leebounds/"
+Lee_data<-read.csv(paste0(my_path,"/Data/dataLee2009.csv"))
+setwd(paste0(my_path,"/2.estimate_bounds/"))
 
-Lee_data<-read_feather(paste0(my_path,"/R_code/dataLee2009.feather"))
-setwd(paste0(my_path,"/R_code/2.estimate_bounds/"))
 
 
-source(paste0(my_path,"/R_code/leebounds.R"))
-#source(paste0(my_path,"/R_code/libraries.R"))
-source(paste0(my_path,"/R_code/ortholeebounds.R"))
-source(paste0(my_path,"/R_code/utils.R"))
+source(paste0(my_path,"/leebounds.R"))
+#source(paste0(my_path,"/libraries.R"))
+source(paste0(my_path,"/ortholeebounds.R"))
+source(paste0(my_path,"/utils.R"))
 
 estimated_leebounds_CI<-matrix(0,2,length(weeks))
 estimated_leebounds<-matrix(0,2,length(weeks))
