@@ -1,5 +1,5 @@
 # leebounds
-This package provides various methods to construct bounds on the Average Treatment Effect in the presence of endogeneous selection. 
+This package provides various methods to construct bounds on the Average Treatment Effect (ATE) in the presence of endogeneous selection into the sample. 
 
 
 # Installation
