@@ -72,6 +72,6 @@ for (j in 1:length(weeks)) {
 estimated_bounds_CI<-rbind(estimated_leebounds,estimated_leebounds_CI)
 colnames(estimated_bounds_CI)<-paste0("week",weeks)
 rownames(estimated_bounds_CI)<-c("lower_bound","upper_bound","lower_bound_CI","upper_bound_CI")
-write.table(estimated_bounds_CI,paste0("Estimated_Bounds/estimated_basic_leebounds_CI_weeks_",min(weeks),"_",max(weeks),".csv"),
+write.table(estimated_bounds_CI,paste0("Estimated_Bounds/estimated_leebounds_monotone_weeks_",min(weeks),"_",max(weeks),".csv"),
             sep=",")
 

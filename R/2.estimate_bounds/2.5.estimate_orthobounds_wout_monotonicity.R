@@ -12,20 +12,14 @@ library(hdm)
 
 ### Packages required for parallelization 
 ### Crucial for replicating results for all weeks = 1:208
-### Can be replaced by regular for loop for fewer weeks
-library(foreach)
-library(doMC)
-library(doParallel)
-cores=detectCores()
-#cl <- makeCluster(cores[1]-1) 
-#registerDoParallel(cl)
+
 
 
 if (length(args)<1) {
   weeks = 1:208
   selection_function_name="glm"
   selection_function=glm
-  
+  quantile_grid_size=0.01
 } else {
   min_week = as.numeric(args[1])
   max_week = as.numeric(args[2])
@@ -55,18 +49,14 @@ source(paste0(my_path,"/R/ortholeebounds.R"))
 source(paste0(my_path,"/R/utils.R"))
 
 
-cl <- makeCluster(cores[1]-1) 
-registerDoParallel(cl)
 estimated_orthobounds<-matrix(0,2,length(weeks))
 estimated_orthobounds_CI<-matrix(0,2,length(weeks))
 
 colnames(estimated_orthobounds)<-weeks
 rownames(estimated_orthobounds)<-c("lower_bound","upper_bound")
 
-colnames(estimated_orthobounds_CI)<-weeks
-rownames(estimated_orthobounds_CI)<-c("lower_bound_CI","upper_bound_CI")
 
-myres_ortho=foreach(j=1:length(weeks), .combine=rbind,.packages=c("expm","purrr","quantreg")) %dopar%  {
+for (j in 1:length(weeks))  {
   week<-weeks[j]
   print(paste0("Computing bounds for week ",week))
   leedata<-leedata_week[[j]]
@@ -112,17 +102,10 @@ myres_ortho=foreach(j=1:length(weeks), .combine=rbind,.packages=c("expm","purrr"
   estimated_orthobounds_CI[,j]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb[[j]]),ATE_est= estimated_orthobounds[,j],ci_alpha=ci_alpha)
   
   
-  res=cbind( estimated_orthobounds,
-             estimated_orthobounds_CI
-  )
+
 }
 
-estimated_bounds_CI<-matrix(0,nrow=4,ncol=length(weeks))
-
-for (j in 1:length(weeks)) {
-  estimated_bounds_CI[1:2,j]<-myres_ortho[(2*j-1):(2*j),1]
-  estimated_bounds_CI[3:4,j]<-myres_ortho[(2*j-1):(2*j),2]
-}
+estimated_bounds_CI<-rbind( estimated_orthobounds,estimated_orthobounds_CI)
 
 colnames(estimated_bounds_CI)<-paste0("week_",weeks)
 rownames(estimated_bounds_CI)<-c("lower_bound","upper_bound","lower_bound_CI","upper_bound_CI")

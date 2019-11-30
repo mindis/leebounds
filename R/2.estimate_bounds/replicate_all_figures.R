@@ -76,7 +76,7 @@ quantile_grid_size<-0.01
 min_week<-1
 max_week<-208
 estimated_orthobounds_CI<-read.csv(paste0("Estimated_Bounds/estimated_orthobounds_monotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".csv"))
-estimated_leebounds_CI<-read.csv(paste0("Estimated_Bounds/estimated_basic_leebounds_CI_weeks_",min_week,"_",max_week,".csv"))
+estimated_leebounds_CI<-read.csv(paste0("Estimated_Bounds/estimated_leebounds_monotone_weeks_",min_week,"_",max_week,".csv"))
 
 estimated_orthobounds_CI<-estimated_orthobounds_CI[,2:209]
 ylims=c(-0.4,0.3)

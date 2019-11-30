@@ -1,2 +1,2 @@
 *.RData
-/net/holyparkesec/data/tata/leebounds/R/*.csv
+*.csv
