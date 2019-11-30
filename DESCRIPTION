@@ -8,4 +8,4 @@ Description: This package provides basic (Lee (2009)) and orthogonal (Semenova (
 License: GPL
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 7.0.1

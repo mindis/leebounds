@@ -1,16 +1,20 @@
 
-### basic lee bounds
-### by Vira Semenova based on Lee (2009) "Trimming for Bounds ..."
-### Assumption 1: D is independent of (Y_1,Y_0,S_1,S_0)
-### Assumption 2: treatment can only help selection S_1 >= S_0.
-
 ## method to get bounds
 GetBounds<-function(x) {
   return(c(x$lower_bound,x$upper_bound))
 }
 
 
-
+#' Compute basic Lee (2009) bounds
+#'
+#' This function computes basic Lee (2009) upper and lower bound on the Average Treatment Effect. Its input argument
+#' is a dataframe consisting of d=treat (binary treatment), s = selection (e.g., employment, test participation), and 
+#'  outcome = sy observed only if s=1 (e.g., wage, test score). Lee (2009) bounds make two assumptions: (1) Treatment is randomly assigned and (2)
+#'  Treatment cannot hurt selection: S_1 >= S_0 a.s., where  S_1,S_0 are potential selection outcomes.
+#'
+#' @param leedata data frame with treat, selection, outcome
+#' @return Lee (2009) lower and upper bound
+#' @export
 leebounds<-function(leedata) {
   # args:
   # d: binary (1/0)treatment
@@ -39,9 +43,9 @@ leebounds<-function(leedata) {
   y_treat<-sy[d==1 &s==1]
   y_control<-sy[d==0 & s==1]
   
-  yp0<-quantile(y_treat,p0)
+  yp0<-stats::quantile(y_treat,p0)
   
-  y1p0<-quantile(y_treat,1-p0)
+  y1p0<-stats::quantile(y_treat,1-p0)
   
   
   trimmed_mean_upper<-mean(y_treat[y_treat>=y1p0])
@@ -58,10 +62,16 @@ leebounds<-function(leedata) {
 }
 
 
-### Assumption 1: D is independent of (Y_1,Y_0,S_1,S_0)
-### Assumption 2': either  S_1 >= S_0 a.s. or S_0 >= S_1 a.s.
-
-
+#' Compute Lee (2009) bounds with unknown monotonicity direction
+#'
+#' This function computes basic Lee (2009) upper and lower bound on the Average Treatment Effect . Its input argument
+#' is a dataframe consisting of d=treat (binary treatment), s = selection (e.g., employment, test participation), and 
+#'  outcome = sy observed only if s=1 (e.g., wage, test score). Lee (2009) bounds make two assumptions: (1) Treatment is randomly assigned and (2)
+#'  Treatment either cannot hurt or cannot help selection, but the direction is the same for all individuals: S_1 >= S_0 a.s. or S_0>=S_1, where  S_1,S_0 are potential selection outcomes.
+#'
+#' @param leedata data frame with treat, selection, outcome
+#' @return Lee (2009) lower and upper bound
+#' @export
 leebounds_unknown_sign<-function(leedata) {
   d<-leedata$treat
   s<-leedata$selection
@@ -108,8 +118,8 @@ leebounds_unknown_sign<-function(leedata) {
     y_trim<-sy[trim_group_inds &s==1]
     y_nontrim<-sy[nontrim_group_inds & s==1]
     
-    yp0<-quantile(y_trim,p0_star)
-    y1p0<-quantile(y_trim,1-p0_star)
+    yp0<-stats::quantile(y_trim,p0_star)
+    y1p0<-stats::quantile(y_trim,1-p0_star)
     
     trimmed_mean_upper<-mean(y_trim[y_trim>=y1p0])
     trimmed_mean_lower<-mean(y_trim[y_trim<=yp0])
@@ -131,16 +141,18 @@ leebounds_unknown_sign<-function(leedata) {
   
 }
 
-### by Vira Semenova 
 
-### Assumption 1: D is independent of (Y_1,Y_0,S_1,S_0)
-### Assumption 2: There exists a partition of covariates X into X_0 |_| X_1:
-## S_1 >= S_0 a.s. on X_0 and S_0 >= S_1 on X_1
-
-### Assumption 2'. Sufficiently strong tretament effect: inf_{X} | p(X)-1|>eps>0.
-### Mistake in the indicator function does not matter a.s.
-
-
+#' Compute Semenova (2019) bounds with conditional MTR assumption
+#'
+#' This function computes Semenova (2019) bounds upper and lower bound on the Average Treatment Effect under conditional MTR assumption. Its input argument
+#' is a dataframe consisting of d=treat (binary treatment), s = selection (e.g., employment, test participation), and 
+#'  outcome = sy observed only if s=1 (e.g., wage, test score). Lee (2009) bounds make two assumptions: (1) Treatment is randomly assigned and (2)
+#'  There exists a partition of covariates X into X=X_0 + X_1 such that treatment helps selection if and only if x is in X_0 and 
+#'  treatment hurts selection otherwise. 
+#'  
+#' @param leedata,s.hat data frame with treat, selection, outcome; s.hat: predicted selection outcome
+#' @return Lee (2009) lower and upper bound
+#' @export
 leebounds_wout_monotonicity<-function(leedata,s.hat) {
 
 

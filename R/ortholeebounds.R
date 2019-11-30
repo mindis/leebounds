@@ -1,3 +1,15 @@
+#' Compute orthogonal bounds (Semenova (2019))
+#'
+#' This function computes orthogonal bounds Semenova (2019) upper and lower bound on the Average Treatment Effect. Its input argument
+#' is a dataframe consisting of d=treat (binary treatment), s = selection (e.g., employment, test participation),  
+#'  outcome = sy observed only if s=1 (e.g., wage, test score). In addition, it also requires the first-stage estimates
+#'  of the conditional probability of selection and  the conditional quantile. It returns orthogonal (with respect to the first-stage)
+#'  estimates of the upper and the lower bound. An optional vector of weights can be applied to the data to
+#'  constructed weighted sample average.
+#'
+#' @param leedata data frame with treat, selection, outcome
+#' @return lower and upper bound on ATE
+#' @export
 ortho_bounds_ss_wt<-function(leedata,treat_helps,y.hat,s.hat,weights=NULL,s_min=0.1,...) {
   
   ## args: data
@@ -19,21 +31,21 @@ ortho_bounds_ss_wt<-function(leedata,treat_helps,y.hat,s.hat,weights=NULL,s_min=
   y.1.p0.hat<-y.hat$y.1.p0.hat
   s.0.hat<-s.hat$s.0.hat
   s.1.hat<-s.hat$s.1.hat
-  prop0<-weighted.mean(x=(d==0),w=weights)
-  prop1<-weighted.mean(x=(d==1),w=weights)
-  prop10<-weighted.mean(x=(s==1&d==0),w=weights)
-  prop11<-weighted.mean(x=(s==1&d==1),w=weights)
+  prop0<-stats::weighted.mean(x=(d==0),w=weights)
+  prop1<-stats::weighted.mean(x=(d==1),w=weights)
+  prop10<-stats::weighted.mean(x=(s==1&d==0),w=weights)
+  prop11<-stats::weighted.mean(x=(s==1&d==1),w=weights)
   
   if (treat_helps) {
     
     p.0.hat=s.0.hat/sapply(s.1.hat,max,s_min)
     p.0.hat=sapply(p.0.hat,min,1)
     y_nontrim<-sy[d==0 & s==1]
-    trimmed_mean_upper<-weighted.mean(x=d*s*sy*(sy>=y.1.p0.hat),w=weights)*prop0/prop1/prop10
-    trimmed_mean_lower<-weighted.mean(x=d*s*sy*(sy<=y.p0.hat),w=weights)*prop0/prop1/prop10
+    trimmed_mean_upper<-stats::weighted.mean(x=d*s*sy*(sy>=y.1.p0.hat),w=weights)*prop0/prop1/prop10
+    trimmed_mean_lower<-stats::weighted.mean(x=d*s*sy*(sy<=y.p0.hat),w=weights)*prop0/prop1/prop10
     
-    upper_bound_effect<- trimmed_mean_upper-weighted.mean(x=y_nontrim,w=weights[d==0 & s==1])
-    lower_bound_effect<- trimmed_mean_lower-weighted.mean(x=y_nontrim,w=weights[d==0 & s==1])
+    upper_bound_effect<- trimmed_mean_upper-stats::weighted.mean(x=y_nontrim,w=weights[d==0 & s==1])
+    lower_bound_effect<- trimmed_mean_lower-stats::weighted.mean(x=y_nontrim,w=weights[d==0 & s==1])
     
     
     gamma1x<-y.1.p0.hat*prop0/prop10
@@ -74,14 +86,14 @@ ortho_bounds_ss_wt<-function(leedata,treat_helps,y.hat,s.hat,weights=NULL,s_min=
     p.0.hat=sapply(p.0.hat,min,1)
     
     y_nontrim<-sy[d==1 & s==1]
-    trimmed_mean_upper<-weighted.mean(x=(1-d)*s*sy*(sy>=y.1.p0.hat),
+    trimmed_mean_upper<-stats::weighted.mean(x=(1-d)*s*sy*(sy>=y.1.p0.hat),
                                       w=weights)*prop1/prop0/prop11
-    trimmed_mean_lower<-weighted.mean(x=(1-d)*s*sy*(sy<=y.p0.hat),
+    trimmed_mean_lower<-stats::weighted.mean(x=(1-d)*s*sy*(sy<=y.p0.hat),
                                       w=weights )*prop1/prop0/prop11
     
-    upper_bound_effect<-weighted.mean(y_nontrim,
+    upper_bound_effect<-stats::weighted.mean(y_nontrim,
                                       w=weights[d==1 & s==1]) - trimmed_mean_lower
-    lower_bound_effect<-weighted.mean(y_nontrim,
+    lower_bound_effect<-stats::weighted.mean(y_nontrim,
                                       w=weights[d==1 & s==1]) - trimmed_mean_upper
     
     gamma1x<-(y.1.p0.hat)*p.0.hat*prop1/prop11
@@ -270,7 +282,7 @@ estimate_distribution_regression<-function(training_data,test_data,variables_for
     for (i in 1:(length(taus))) {
      
       tau<-taus[i]
-      q_model<-rq(outcome~.,data=training_data[,variables_for_outcome],tau=tau )
+      q_model<-quantreg::rq(outcome~.,data=training_data[,variables_for_outcome],tau=tau )
       estimated_quantiles[,i]<-predict(q_model,test_data[,variables_for_outcome])
     }
   }
@@ -280,7 +292,7 @@ estimate_distribution_regression<-function(training_data,test_data,variables_for
     for (i in 1:(length(taus))) {
       
       tau<-taus[i]
-      q_model<-cv.rq.pen(x=as.matrix(training_data[,variables_for_outcome]),
+      q_model<-rqPen::cv.rq.pen(x=as.matrix(training_data[,variables_for_outcome]),
                          y=training_data$outcome,tau=tau )
       estimated_quantiles[,i]<-predict(q_model,test_data[,variables_for_outcome])
     }
@@ -340,9 +352,9 @@ estimate_selection<-function(leedata,selection_function=NULL,form=NULL,variables
   if (is.null(selection_function)) {
     p = length(variables_for_selection)
     if (p<=20) {
-      selection_function=glm
+      selection_function=stats::glm
     } else {
-      selection_function=rlassologit
+      selection_function=hdm::rlassologit
     }
   }
   #print(variables_for_selection)
