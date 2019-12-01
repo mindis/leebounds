@@ -382,6 +382,8 @@ estimate_selection<-function(leedata,selection_function=NULL,form=NULL,variables
   
 }
 
+
+
 predict_selection<-function(fit,leedata) {
   leedata_0treat<-leedata
   leedata_0treat$treat<-0
@@ -404,7 +406,7 @@ ortho_leebounds<-function(leedata_cov,treat_helps,s.hat=NULL,y.hat=NULL,...) {
   #  s.0.hat<-leedata_cov$s.0.x
    # s.1.hat<-leedata_cov$s.1.x
     
-   # print("Found true propensity score")
+   print("Found true propensity score")
   } else {
     print("Estimating the propensity score")
     
@@ -423,7 +425,7 @@ ortho_leebounds<-function(leedata_cov,treat_helps,s.hat=NULL,y.hat=NULL,...) {
    #  y.1.p0.hat<-leedata_cov$y.1.p0.x
    #  y.hat=data.frame(y.p0.hat=y.p0.hat,
   #                    y.1.p0.hat=y.1.p0.hat)
-    # print("Found true quantiles")
+     print("Found true quantiles")
      estimated_bounds<-ortho_bounds_ss_wt(leedata_cov,treat_helps=treat_helps,y.hat=y.hat,s.hat=s.hat,...)
      return(list(s.hat=s.hat,
                  y.hat=y.hat,

@@ -46,7 +46,8 @@ weighted_bb<-function(mydata,B,function_name,...) {
   
   
   for (b in 1:B) {
-    resultb<-function_name(mydata,weights[,b],...)
+    print(b)
+    resultb<-try(function_name(mydata,weights[,b],...))
     ATE_bb[,b]<-GetBounds(resultb)
   }
   return(ATE_bb)
@@ -161,7 +162,7 @@ imb_manski_critical_value<-function(x,args) {
   return(f)
 }
 
-plot_bounds<-function(plotname,estimated_leebounds_CI,estimated_orthobounds_CI,ylim=c(-0.4,0.3)) {
+plot_bounds<-function(plotname,weeks,estimated_leebounds_CI,estimated_orthobounds_CI,ylim=c(-0.4,0.3)) {
   png(plotname,width = 880,height=540)
   plot(weeks, estimated_leebounds_CI[1,],type="l",lwd=2
        ,xlab="Week since random assignment",ylab="Treatment effect",col="blue",

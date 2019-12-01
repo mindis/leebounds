@@ -134,7 +134,7 @@ leebounds_unknown_sign<-function(leedata) {
     }
     
     leebounds_result<-list(lower_bound=lower_bound_effect,upper_bound=upper_bound_effect)
-    return(leebounds_result)
+    return(list(lower_bound=lower_bound_effect,upper_bound=upper_bound_effect,p0=p0))
   }
   
  
