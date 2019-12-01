@@ -45,7 +45,7 @@ for (i in 1:length(weeks)) {
   ## treating NAs in baseline covariates
   leedata_cov[is.na(leedata_cov)]<-0
   print(i)
-  prop_trim[i]<-mean(leedata_cov$selection==1 & leedata_cov$treat==0)/mean(leedata_cov$selection==1 & leedata_cov$treat==1)
+  prop_trim[i]<-mean(leedata_cov$selection[leedata_cov$treat==0])/mean(leedata_cov$selection[leedata_cov$treat==1])
   
 }
 
@@ -64,7 +64,7 @@ dev.off()
 ####### Step 2. Report unconditional Lee bounds for each week
 
 
-
+p0<-rep(0,208)
 for (i in 1:length(weeks)) {
   week<-weeks[i]
   hwh_name<-paste0("HWH",week)
@@ -80,6 +80,7 @@ for (i in 1:length(weeks)) {
   leedata_cov[is.na(leedata_cov)]<-0
   leebounds<-leebounds_unknown_sign(leedata_week)
   estimated_leebounds[,i]<-GetBounds(leebounds)
+  p0[i]<-leebounds$p0
 }
 png("Figures/Basic_Lee_bounds_only.png",width=840,height=480)
 plot(weeks,estimated_leebounds[2,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",
