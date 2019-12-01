@@ -9,6 +9,9 @@ basic_bounds<-read.csv(paste0(my_path,"/R/2.estimate_bounds/Estimated_Bounds/est
 estimated_leebounds<-basic_bounds[1:2,]
 estimated_leebounds_CI<-basic_bounds[3:4,]
 setwd(paste0(my_path,"/R/2.estimate_bounds/"))
+
+
+
 png("Figures/Basic_Lee_bounds.png",width=840,height=480)
 plot(weeks,estimated_leebounds[2,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",
      type="l",lwd=3,cex.lab=1.5, cex.axis=1.5,cex=1,ylim=c(-0.3,0.3))+
@@ -98,6 +101,21 @@ plotname<-paste0("Figures/nonmonotone_",selection_function_name,".png")
 plot_bounds(plotname=plotname,estimated_leebounds_CI=estimated_leebounds_CI,
             estimated_orthobounds_CI=estimated_orthobounds_CI)
 
+#### Bounds Lee basic robust
+plotname<-paste0("Figures/Lee_mon_nonmonotone","glm",".png")
+monotone<-read.csv(paste0("Estimated_Bounds/estimated_leebounds_monotone_weeks_",min_week,"_",max_week,".csv"))
+nonmonotone<-read.csv(paste0("Estimated_Bounds/estimated_leebounds_nonmonotone_glm_weeks_",min_week,"_",max_week,".csv"))
+nonmonotone<-nonmonotone[,2:209]
+
+png(plotname,width=840,height=480)
+plot(weeks,monotone[2,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",
+     type="l",lwd=3,cex.lab=1.5, cex.axis=1.5,cex=1,ylim=c(-0.3,0.3))+
+  lines(weeks,monotone[1,],col="blue",lwd=3)+
+  lines(weeks,nonmonotone[1,],col="black", lwd=3)+
+  lines(weeks,nonmonotone[2,],col="black", lwd=3)+
+  title("Lee (2009) no-covariate bounds: monotone (blue) and non-monotone (black)")+
+  abline(a=0,b=0,col="black",lwd=2)
+dev.off()
 
 #### Bounds on multidimensional effect: see 2.6.simultaneous_bounds.R
 
