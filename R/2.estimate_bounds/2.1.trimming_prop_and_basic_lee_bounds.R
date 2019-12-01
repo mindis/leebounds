@@ -50,7 +50,7 @@ for (i in 1:length(weeks)) {
 }
 
 
-png("Figures/Trimming_unweighted.png")
+png("Figures/Trimming_unweighted.png",width=840,height=480)
 plot(weeks,prop_trim,xlab="Weeks since random assignment",ylab="Trimming threshold",lwd=3,ylim=c(0,2),type="l",cex.lab=1.5, cex.axis=1.5,cex=1)+
   abline(a=1,b=0,col="black",lwd=2)+
   title("Trimming threshold over time")+
@@ -81,7 +81,7 @@ for (i in 1:length(weeks)) {
   leebounds<-leebounds_unknown_sign(leedata_week)
   estimated_leebounds[,i]<-GetBounds(leebounds)
 }
-png("Figures/Basic_Lee_bounds_only.png")
+png("Figures/Basic_Lee_bounds_only.png",width=840,height=480)
 plot(weeks,estimated_leebounds[2,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",
      type="l",lwd=3,cex.lab=1.5, cex.axis=1.5,cex=1,ylim=c(-0.3,0.3))+
   lines(weeks,estimated_leebounds[1,],col="blue",lwd=3)+

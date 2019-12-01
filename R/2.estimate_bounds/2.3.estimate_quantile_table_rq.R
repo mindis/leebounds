@@ -75,4 +75,9 @@ for (j in 1:length(weeks)) {
 
 }
 rm(list=c("Lee_data","leedata_cov"))
+estimated_quantiles_11_mat<-matrix(estimated_quantiles_11,ncol=dim(estimated_quantiles_11)[2]*dim(estimated_quantiles_11)[3])
+estimated_quantiles_10_mat<-matrix(estimated_quantiles_10,ncol=dim(estimated_quantiles_11)[2]*dim(estimated_quantiles_11)[3])
+write.csv(as.data.frame(estimated_quantiles_11_mat),paste0("First_Stage_Predicted_Values/estimated_quantiles_11_mat.",as.character(quantile_grid_size),"_weeks_",min(weeks),"_",max(weeks),".csv"))
+write.csv(as.data.frame(estimated_quantiles_10_mat),paste0("First_Stage_Predicted_Values/estimated_quantiles_10_mat.",as.character(quantile_grid_size),"_weeks_",min(weeks),"_",max(weeks),".csv"))
+
 save.image(paste0("First_Stage_Predicted_Values/estimated_quantiles_rq_",as.character(quantile_grid_size),"_weeks_",min(weeks),"_",max(weeks),".RData"))

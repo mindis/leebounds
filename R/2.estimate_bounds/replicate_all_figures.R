@@ -5,11 +5,11 @@ weeks<-1:208
 # weeks from Lee (2009)
 selected_weeks<-c(45,90,135,180)
 
-basic_bounds<-read.csv(paste0(my_path,"/R/2.estimate_bounds/Estimated_Bounds/estimated_basic_leebounds_CI_weeks_1_208.csv"))
+basic_bounds<-read.csv(paste0(my_path,"/R/2.estimate_bounds/Estimated_Bounds/estimated_leebounds_monotone_weeks_1_208.csv"))
 estimated_leebounds<-basic_bounds[1:2,]
 estimated_leebounds_CI<-basic_bounds[3:4,]
 setwd(paste0(my_path,"/R/2.estimate_bounds/"))
-png("Figures/Basic_Lee_bounds.png")
+png("Figures/Basic_Lee_bounds.png",width=840,height=480)
 plot(weeks,estimated_leebounds[2,],xlab="Weeks since random assignment",ylab="Lower and upper bound",col="blue",
      type="l",lwd=3,cex.lab=1.5, cex.axis=1.5,cex=1,ylim=c(-0.3,0.3))+
   lines(weeks,estimated_leebounds[1,],col="blue",lwd=3)+
@@ -26,7 +26,7 @@ p.0.hat.nonmonotone<-read.csv(paste0(my_path,"/R/2.estimate_bounds/First_Stage_P
 Lee_data<-read.csv(paste0(my_path,"/JobCorps_data/dataLee2009.csv"))
 estimated.p.0.hat<-p.0.hat.nonmonotone[,2:209]
 fraction_treat_helps<-apply(estimated.p.0.hat<1,2,mean)
-png("Figures/Prop_treat_helps.png")
+png("Figures/Prop_treat_helps.png",width=840,height=480)
 
 plot(weeks,fraction_treat_helps,xlab="Weeks since random assignment",ylab="Fraction",col="blue",
      type="l",lwd=3,cex.lab=1.5, cex.axis=1.5,cex=1,ylim=c(0,1))+
@@ -57,7 +57,7 @@ for (i in 1:length(weeks)) {
   ## deciding which covariates to put in
 }
 
-png("Figures/Treat_control_diff_by_group.png")
+png("Figures/Treat_control_diff_by_group.png",width=840,height=480)
 par(mfrow=c(1,2))
 plot(weeks,sapply(employment_rate_X0_treat-employment_rate_X0_control,max,0),xlab="Weeks",ylab="Treatment-control difference",col="blue",
     lwd=3,cex.lab=1.5, cex.axis=1.5,cex=1,ylim=c(-0.15,0.15))+
