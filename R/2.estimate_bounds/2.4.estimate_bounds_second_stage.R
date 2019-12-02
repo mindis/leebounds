@@ -56,7 +56,11 @@ rownames(estimated_orthobounds_CI)<-c("lower_bound","upper_bound")
 
 weeks<-min_week:max_week
 
-for (j in 1:length(weeks)) {
+
+
+y.hat.all<-list()
+s.hat.all<-list()
+for (j in 5:length(weeks)) {
   week<-weeks[j]
   print(paste0("Computing bounds for week ",week))
   
@@ -71,32 +75,47 @@ for (j in 1:length(weeks)) {
   }
    
   
-  leebounds_result<-leebounds_unknown_sign(leedata=leedata_week[[j]])
-  estimated_leebounds[,j]<-GetBounds( leebounds_result)
+  #leebounds_result<-leebounds_unknown_sign(leedata=leedata_week[[j]])
+  #estimated_leebounds[,j]<-GetBounds( leebounds_result)
  
   y.hat=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantile_table,p.0.hat=p.0.star,quantile_grid_size=quantile_grid_size)
-    
+  y.hat.all[[j]]<-y.hat
+  
   s.hat=data.frame(s.0.hat=s.0.hat.monotone[,j],s.1.hat=s.1.hat.monotone[,j])
-    
+  s.hat.all[[j]]<-s.hat
   leebounds_result<-ortho_bounds_ss_wt(leedata=leedata_week[[j]],y.hat=y.hat,s.hat=s.hat,treat_helps=treat_helps,s_min=0.0001)
   estimated_orthobounds[,j]<-GetBounds(leebounds_result)
     
-  estimated_orthobounds_bb[[j]]<-weighted_bb(mydata=leedata_week[[j]],B=Nboot,function_name=ortho_bounds_ss_wt,
-                                          y.hat=y.hat,s.hat=s.hat,treat_helps=treat_helps)
-  estimated_orthobounds_CI[,j]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb[[j]]),ATE_est= estimated_orthobounds[,j],ci_alpha=ci_alpha)
-  
  
-   
+}
+
+if (TRUE) {
+  library(foreach)
+  library(doMC)
+  library(doParallel)
+  cores=detectCores()
+  cl <- makeCluster(cores[1]-1) 
+  registerDoParallel(cl)
+}
+myres_bb=foreach(j=5:length(weeks), .combine=rbind,.packages=c("expm","stats")) %dopar%  {
+ estimated_orthobounds_bb[[j]]<-weighted_bb(mydata=leedata_week[[j]],B=Nboot,function_name=ortho_bounds_ss_wt,
+y.hat=y.hat,s.hat=s.hat,treat_helps=treat_helps)
+ estimated_orthobounds_CI[,j]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb[[j]]),ATE_est= estimated_orthobounds[,j],ci_alpha=ci_alpha)
+ res=cbind(estimated_orthobounds[,j],estimated_orthobounds_CI[,j])
+}
+
+myres_new<-rbind(matrix(0,8,2),myres_bb)
+estimated_orthobounds_CI<-matrix(0,nrow=4,ncol=length(weeks))
+for (j in 1:length(weeks)) {
+  estimated_orthobounds_CI[1:2,j]<-myres_new[(2*j-1):(2*j),1]
+  estimated_orthobounds_CI[3:4,j]<-myres_new[(2*j-1):(2*j),2]
 }
 
 
-estimated_bounds_CI<-rbind(estimated_orthobounds,estimated_orthobounds_CI)
-colnames(estimated_bounds_CI)<-paste0("week_",weeks)
-rownames(estimated_bounds_CI)<-c("lower_bound","upper_bound","lower_bound_CI","upper_bound_CI")
+colnames(estimated_orthobounds_CI)<-paste0("week_",weeks)
+rownames(estimated_orthobounds_CI)<-c("lower_bound","upper_bound","lower_bound_CI","upper_bound_CI")
 
 
-write.csv(estimated_bounds_CI,paste0("Estimated_Bounds/estimated_orthobounds_monotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".csv"))
 
-
+write.csv(estimated_orthobounds_CI,paste0("Estimated_Bounds/estimated_orthobounds_monotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".csv"))
 save.image(paste0("Estimated_Bounds/estimated_orthobounds_monotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".RData"))
-

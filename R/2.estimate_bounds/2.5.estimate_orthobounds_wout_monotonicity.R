@@ -55,13 +55,14 @@ estimated_orthobounds_CI<-matrix(0,2,length(weeks))
 colnames(estimated_orthobounds)<-weeks
 rownames(estimated_orthobounds)<-c("lower_bound","upper_bound")
 
-
-for (j in 1:length(weeks))  {
+s.hat.all<-list()
+y.hat.all<-list()
+for (j in 5:length(weeks))  {
   week<-weeks[j]
   print(paste0("Computing bounds for week ",week))
   leedata<-leedata_week[[j]]
   s.hat<-data.frame(s.0.hat=s.0.hat.nonmonotone[,j],s.1.hat=s.1.hat.nonmonotone[,j])
-  
+  s.hat.all[[j]]<-s.hat
   ### estimate ortho lee bounds without monotonicity
   ### extract quantile table for correct week
   estimated_quantile_table_10<-estimated_quantiles_10[,,j]
@@ -93,21 +94,44 @@ for (j in 1:length(weeks))  {
   if (sum(is.na(y.hat))>0) {
     stop("NAs in quantile estimates")
   }
+  y.hat.all[[j]]<-y.hat
   leebounds_ortho_result<-ortho_leebounds_wout_monotonicity(leedata_cov=leedata,sample_size=sample_size,s.hat=s.hat,y.hat=y.hat)
   estimated_orthobounds[,j]<-GetBounds(leebounds_ortho_result)
-  
-  ### use weighted bootstrap to compute the confidence region ####
-  estimated_orthobounds_bb[[j]]<-weighted_bb(mydata=leedata,B=Nboot,function_name=ortho_leebounds_wout_monotonicity,
-                                             y.hat=y.hat,s.hat=s.hat,sample_size=sample_size)
-  estimated_orthobounds_CI[,j]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb[[j]]),ATE_est= estimated_orthobounds[,j],ci_alpha=ci_alpha)
-  
-  
-
 }
 
-estimated_bounds_CI<-rbind( estimated_orthobounds,estimated_orthobounds_CI)
 
-colnames(estimated_bounds_CI)<-paste0("week_",weeks)
-rownames(estimated_bounds_CI)<-c("lower_bound","upper_bound","lower_bound_CI","upper_bound_CI")
-write.csv(estimated_bounds_CI,paste0("Estimated_Bounds/estimated_orthobounds_nonmonotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".csv"))
+library(foreach)
+library(doMC)
+library(doParallel)
+cores=detectCores()
+cl <- makeCluster(cores[1]-1) 
+registerDoParallel(cl)
+
+myres_bb=foreach(j=5:length(weeks), .combine=rbind,.packages=c("expm","stats")) %dopar%  {
+  ### use weighted bootstrap to compute the confidence region ####
+  estimated_orthobounds_bb[[j]]<-weighted_bb(mydata=leedata_week[[j]],B=Nboot,function_name=ortho_leebounds_wout_monotonicity,
+                                             y.hat=y.hat.all[[j]],s.hat=s.hat.all[[j]],sample_size=sample_size)
+  estimated_orthobounds_CI[,j]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb[[j]]),ATE_est= estimated_orthobounds[,j],ci_alpha=ci_alpha)
+  res=cbind(estimated_orthobounds[,j],estimated_orthobounds_CI[,j])
+}
+stopCluster(cl)
+env <- foreach:::.foreachGlobals
+rm(list=ls(name=env), pos=env)
+
+
+
+myres_new<-rbind(matrix(0,8,2),myres_bb)
+estimated_orthobounds_CI<-matrix(0,nrow=4,ncol=length(weeks))
+for (j in 1:length(weeks)) {
+  estimated_orthobounds_CI[1:2,j]<-myres_new[(2*j-1):(2*j),1]
+  estimated_orthobounds_CI[3:4,j]<-myres_new[(2*j-1):(2*j),2]
+}
+
+
+colnames(estimated_orthobounds_CI)<-paste0("week_",weeks)
+rownames(estimated_orthobounds_CI)<-c("lower_bound","upper_bound","lower_bound_CI","upper_bound_CI")
+
+
+
+write.csv(estimated_orthobounds_CI,paste0("Estimated_Bounds/estimated_orthobounds_nonmonotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".csv"))
 save.image(paste0("Estimated_Bounds/estimated_orthobounds_nonmonotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".RData"))

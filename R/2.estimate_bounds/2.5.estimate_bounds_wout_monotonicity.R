@@ -67,7 +67,7 @@ rownames(estimated_leebounds_CI)<-c("lower_bound_CI","upper_bound_CI")
 
 
 
-myres=foreach(j=1:length(weeks), .combine=rbind,.packages=c("expm")) %dopar%  {
+myres=foreach(j=5:length(weeks), .combine=rbind,.packages=c("expm")) %dopar%  {
   week<-weeks[j]
   print(paste0("Computing bounds for week ",week))
   leedata<-leedata_week[[j]]
@@ -84,11 +84,11 @@ myres=foreach(j=1:length(weeks), .combine=rbind,.packages=c("expm")) %dopar%  {
 } 
 stopCluster(cl)
 
-
+myres_new<-rbind(matrix(0,8,2),myres)
 estimated_leebounds_CI<-matrix(0,nrow=4,ncol=length(weeks))
 for (j in 1:length(weeks)) {
-  estimated_leebounds_CI[1:2,j]<-myres[(2*j-1):(2*j),1]
-  estimated_leebounds_CI[3:4,j]<-myres[(2*j-1):(2*j),2]
+  estimated_leebounds_CI[1:2,j]<-myres_new[(2*j-1):(2*j),1]
+  estimated_leebounds_CI[3:4,j]<-myres_new[(2*j-1):(2*j),2]
 }
 
 

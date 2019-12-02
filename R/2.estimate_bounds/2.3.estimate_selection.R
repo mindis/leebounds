@@ -14,13 +14,11 @@ if (length(args)<1) {
   weeks = 1:208
   selection_function_name="glm"
   selection_function=glm
-  standard_for_loop<-TRUE
 } else {
   min_week = as.numeric(args[1])
   max_week = as.numeric(args[2])
   weeks = min_week:max_week
   selection_function_name=args[3]
-  standard_for_loop<-as.logical(args[4])
   
 }
 
@@ -32,7 +30,7 @@ library(quantreg)
 library(expm)
 library(purrr)
 library(gamlr)
-library(hdm)
+library(hdm,lib.loc="~/apps/R/")
 library(feather,lib.loc="~/apps/R/")
 
 #install.packages("rlist")
@@ -84,8 +82,7 @@ colnames(p.0.hat.nonmonotone)<-weeks
 lasso_res<-list()
 lasso_res_nm<-list()
 
-if (standard_for_loop) {
-  for (j in 1:length(weeks)) {
+for (j in 5:length(weeks)) {
     week<-weeks[j]
     print(paste0("Estimating selection equation for week ",week))
     hwh_name<-paste0("HWH",week)
@@ -135,72 +132,7 @@ if (standard_for_loop) {
     
     }
   
-} else {
-  library(doMC,lib.loc="~/apps/R/")
-  library(doParallel)
-  library(foreach)
-  
-  cores=detectCores()
-  cl <- makeCluster(floor(6/8*cores)) 
-  registerDoParallel(cl)
-  
-  myres=foreach(j=1:length(weeks), .combine=cbind,.packages=c("gamlr")) %dopar%  {
-    week<-weeks[j]
-    print(paste0("Estimating selection equation for week ",week))
-    hwh_name<-paste0("HWH",week)
-    earn_name<-paste0("EARNH",week)
-    logwage_week<-as.numeric(as.matrix(log(Lee_data[,earn_name]/Lee_data[,hwh_name])))
-    logwage_week[is.na(logwage_week)]<-0
-    logwage_week[logwage_week==-Inf]<-0
-    
-    leedata_week<-as.data.frame(cbind(treat=Lee_data$TREATMNT.y,selection=as.numeric(Lee_data[,hwh_name]>0),outcome=logwage_week))
-    ## deciding which covariates to put in
-    leedata_cov<-cbind(leedata_week,Lee_data_covariates)
-    leedata_cov[is.na(leedata_cov)]<-0
-    if (selection_function_name %in% c("cv.gamlr")) {
-      lasso.fit<-cv.gamlr(x=as.matrix(leedata_cov[,setdiff(colnames(leedata_cov),c("outcome","selection"))]),
-                          y=leedata_cov$selection,family="binomial",free=c(1))
-      
-    } else {
-      lasso.fit<-estimate_selection(leedata_cov,selection_function=selection_function,form=form_monotone)
-    }
-    
-    res<-predict_selection(lasso.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("outcome","selection"))])
-    s.0.hat.monotone[,j]<-res$s.0.hat
-    s.1.hat.monotone[,j]<-res$s.1.hat
-    p.0.hat.monotone[,j]<-s.0.hat.monotone[,j]/s.1.hat.monotone[,j]
-    
-    
-    Lee_data_covariates_treat=Lee_data_covariates*matrix(rep(leedata_week$treat,dim(Lee_data_covariates)[2]),ncol=dim(Lee_data_covariates)[2])
-    leedata_cov_nm<-cbind(leedata_week,Lee_data_covariates,Lee_data_covariates_treat)
-    leedata_cov_nm[is.na(leedata_cov_nm)]<-0
-    
-    if (selection_function_name=="cv.gamlr") {
-      lasso.fit.nm<-cv.gamlr(x=as.matrix(leedata_cov_nm[,setdiff(colnames(leedata_cov),c("outcome","selection"))]),
-                             y=leedata_cov_nm$selection,family="binomial",free=c(1))
-      
-      
-    } else {
-      lasso.fit.nm<-estimate_selection(leedata_cov,selection_function=selection_function,form=form_nonmonotone)
-    }
-    
-    res_nm<-predict_selection( lasso.fit.nm,leedata_cov_nm[,setdiff(colnames(leedata_cov),c("outcome","selection"))])
-    s.0.hat.nonmonotone[,j]<- res_nm$s.0.hat
-    s.1.hat.nonmonotone[,j]<- res_nm$s.1.hat
-    p.0.hat.nonmonotone[,j]<-s.0.hat.nonmonotone[,j]/s.1.hat.nonmonotone[,j]
-    
-    res_foreach=cbind(s.0.hat.monotone[,j],
-                      s.1.hat.monotone[,j],
-                      p.0.hat.monotone[,j],
-                      s.0.hat.nonmonotone[,j], s.1.hat.nonmonotone[,j],p.0.hat.nonmonotone[,j])
-  }
-  s.0.hat.monotone<-myres[,6*(0:(length(weeks)-1))+1]
-  s.1.hat.monotone<-myres[,6*(0:(length(weeks)-1))+2]
-  p.0.hat.monotone<-myres[,6*(0:(length(weeks)-1))+3]
-  s.0.hat.nonmonotone<-myres[,6*(0:(length(weeks)-1))+4]
-  s.1.hat.nonmonotone<-myres[,6*(0:(length(weeks)-1))+5]
-  p.0.hat.nonmonotone<-myres[,6*(0:(length(weeks)-1))+6]
-}
+
 
 
 write.csv(as.data.frame(s.0.hat.monotone),paste0("First_Stage_Predicted_Values/Predicted_Selection/s.0.hat.monotone.",selection_function_name,"_weeks_",min(weeks),"_",max(weeks),".csv"))
@@ -212,7 +144,8 @@ write.csv(as.data.frame(s.1.hat.nonmonotone),paste0("First_Stage_Predicted_Value
 write.csv(as.data.frame(p.0.hat.nonmonotone),paste0("First_Stage_Predicted_Values/Predicted_Selection/p.0.hat.nonmonotone.",selection_function_name,"_weeks_",min(weeks),"_",max(weeks),".csv"))
 write.csv(as.data.frame(p.0.hat.monotone),paste0("First_Stage_Predicted_Values/Predicted_Selection/p.0.hat.monotone.",selection_function_name,"_weeks_",min(weeks),"_",max(weeks),".csv"))
 
-
+#p.0.hat.nonmonotone<-cbind(matrix(0,sample_size,4),p.0.hat.nonmonotone)
+#p.0.hat.monotone<-cbind(matrix(0,sample_size,4),p.0.hat.monotone)
 #rm(list=c("Lee_data","leedata_cov","leedata_week","Lee_data_covariates"))
 #setwd(paste0(my_path,"/R/2.estimate_bounds/"))
 #save.image(paste0("First_Stage_Predicted_Values/estimated_selection_",selection_function_name,"_weeks_",min(weeks),"_",max(weeks),".RData"))

@@ -80,7 +80,7 @@ simultaneous_cb<-compute_confidence_rectangle(ATE_boot=t(rbind(estimated_orthobo
                                                                             estimated_orthobounds_bb[[2]]
                                                                             )),ATE_est= as.numeric(estimated_orthobounds[,1:2]),ci_alpha=ci_alpha)
 
-png(paste0("Figures/Simultaneous_bands_week_",paste0(weeks,collapse="_"),".png"))
+png(paste0("Figures/Simultaneous_bands_week_",paste0(weeks,collapse="_"),selection_function_name,".png"))
 plot(x=NA,y=NA,xlim=c(-0.6,0.6),ylim=c(-0.6,0.6),xlab="Week 104",
      ylab="Week 208",cex.main=1.5, cex.lab=1.5, cex.axis=1.5,cex=1)+
   title("Bounds and 95%-Confidence Rectangle for wage effect")
@@ -93,5 +93,6 @@ plot(x=NA,y=NA,xlim=c(-0.6,0.6),ylim=c(-0.6,0.6),xlab="Week 104",
   rect(estimated_orthobounds[1,1],
            estimated_orthobounds[1,2],
            estimated_orthobounds[2,1],
-           estimated_orthobounds[2,2],lwd=2,border="red")
+           estimated_orthobounds[2,2],lwd=2,border="red")+
+    segments(-1,-1,1,1)
 dev.off()
