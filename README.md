@@ -6,7 +6,7 @@ This package provides various methods to construct bounds on the Average Treatme
 ```
 install.packages("devtools")
 library(devtools) 
-install_github("vsemenova/leebounds", build = FALSE)
+install_github("vsemenova/leebounds")
 library(leebounds)
 ```
 # Example
