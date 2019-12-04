@@ -5,16 +5,33 @@ GetBounds<-function(x) {
 }
 
 
-#' Compute basic Lee (2009) bounds
+
+#' @title Estimating Lee (2009) treatment effect bounds 
 #'
-#' This function computes basic Lee (2009) upper and lower bound on the Average Treatment Effect. Its input argument
-#' is a dataframe consisting of d=treat (binary treatment), s = selection (e.g., employment, test participation), and 
-#'  outcome = sy observed only if s=1 (e.g., wage, test score). Lee (2009) bounds make two assumptions: (1) Treatment is randomly assigned and (2)
-#'  Treatment cannot hurt selection: S_1 >= S_0 a.s., where  S_1,S_0 are potential selection outcomes.
+#' @description \code{leebounds} basic Lee (2009) bounds on treatment effect without covariates. Bounds are defined under monotonicity assumption
+#' stating that treatment cannot hurt selection. 
 #'
-#' @param leedata data frame with treat, selection, outcome
-#' @return Lee (2009) lower and upper bound
-#' @export
+#' @usage leebounds(leedata)
+#'
+
+#' @param leedata data frame containing three fields
+#' \item{res}{leedata$treat: binary treatment indicator}
+#' \item{res}{leedata$selection: selection=1 if the outcome is observed }
+#' \item{res}{leedata$outcome:   outcome=selection*outcome}
+#'
+#' @return A list containing the estimate of lower bound and upper bound
+#'
+#' @examples
+#' n <- 500; x <- matrix(rnorm(n*5),nrow=n)
+#' a <- runif(n); y <- a + rnorm(n,sd=.5)
+#'
+#' ce.res <- ctseff(y,a,x, bw.seq=seq(.2,2,length.out=100))
+#' plot.ctseff(ce.res)
+#'
+#' # check that bandwidth choice is minimizer
+#' plot(ce.res$bw.risk$bw,ce.res$bw.risk$risk)
+#'
+#' @references David Lee (2009). Training, Wages, and Sample Selection: Estimating Sharp Bounds on Treatment Effects. \emph{The Review of Economic Studies, 76(3) 1071-1102}. \href{https://www.princeton.edu/~davidlee/wp/resrevision8.pdf}{https://www.princeton.edu/~davidlee/wp/resrevision8.pdf}
 leebounds<-function(leedata) {
   # args:
   # d: binary (1/0)treatment
