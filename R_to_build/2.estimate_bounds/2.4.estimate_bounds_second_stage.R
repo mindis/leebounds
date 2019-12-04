@@ -1,0 +1,121 @@
+rm(list=ls())
+
+
+args<-commandArgs(TRUE)
+my_path<-"/net/holyparkesec/data/tata/leebounds/"
+#library(feather)
+library(quantreg)
+library(expm)
+library(purrr)
+library(hdm)
+
+
+
+
+if (length(args)<1) {
+  weeks = 1:208
+  selection_function_name="glm"
+  selection_function=glm
+  
+} else {
+  min_week = as.numeric(args[1])
+  max_week = as.numeric(args[2])
+  weeks = min_week:max_week
+  selection_function_name=args[3]
+  quantile_grid_size=as.numeric(args[4])
+  
+}
+
+
+### Standard choice of parameters
+
+ci_alpha=0.05
+Nboot<-500
+estimated_orthobounds_bb<-list()
+
+
+setwd(paste0(my_path,"/R/2.estimate_bounds/"))
+load(paste0("First_Stage_Predicted_Values/estimated_selection_",selection_function_name,"_weeks_1_208.RData"))
+load(paste0("First_Stage_Predicted_Values/estimated_quantiles_rq_",as.character(quantile_grid_size),"_weeks_1_208.RData"))
+#my_path<-"/net/holyparkesec/data/tata/Vira/"
+my_path<-"/net/holyparkesec/data/tata/leebounds/"
+setwd(paste0(my_path,"/R/2.estimate_bounds/"))
+source(paste0(my_path,"/R/leebounds.R"))
+#source(paste0(my_path,"/R/libraries.R"))
+source(paste0(my_path,"/R/ortholeebounds.R"))
+source(paste0(my_path,"/R/utils.R"))
+
+estimated_orthobounds<-matrix(0,2,length(weeks))
+estimated_orthobounds_CI<-matrix(0,2,length(weeks))
+estimated_leebounds<-matrix(0,2,length(weeks))
+colnames(estimated_orthobounds)<-weeks
+rownames(estimated_orthobounds)<-c("lower_bound","upper_bound")
+
+colnames(estimated_orthobounds_CI)<-weeks
+rownames(estimated_orthobounds_CI)<-c("lower_bound","upper_bound")
+
+weeks<-min_week:max_week
+
+
+
+y.hat.all<-list()
+s.hat.all<-list()
+for (j in 5:length(weeks)) {
+  week<-weeks[j]
+  print(paste0("Computing bounds for week ",week))
+  
+  if (week<=89) {
+    treat_helps<-FALSE
+    estimated_quantile_table<-estimated_quantiles_10[,,j]
+    p.0.star<-sapply(1/p.0.hat.monotone[,j],min,1)
+  } else {
+    treat_helps<-TRUE
+    estimated_quantile_table<-estimated_quantiles_11[,,j]
+    p.0.star<-sapply(p.0.hat.monotone[,j],min,1)
+  }
+   
+  
+  #leebounds_result<-leebounds_unknown_sign(leedata=leedata_week[[j]])
+  #estimated_leebounds[,j]<-GetBounds( leebounds_result)
+ 
+  y.hat=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantile_table,p.0.hat=p.0.star,quantile_grid_size=quantile_grid_size)
+  y.hat.all[[j]]<-y.hat
+  
+  s.hat=data.frame(s.0.hat=s.0.hat.monotone[,j],s.1.hat=s.1.hat.monotone[,j])
+  s.hat.all[[j]]<-s.hat
+  leebounds_result<-ortho_bounds_ss_wt(leedata=leedata_week[[j]],y.hat=y.hat,s.hat=s.hat,treat_helps=treat_helps,s_min=0.0001)
+  estimated_orthobounds[,j]<-GetBounds(leebounds_result)
+    
+ 
+}
+
+if (TRUE) {
+  library(foreach)
+  library(doMC)
+  library(doParallel)
+  cores=detectCores()
+  cl <- makeCluster(cores[1]-1) 
+  registerDoParallel(cl)
+}
+myres_bb=foreach(j=5:length(weeks), .combine=rbind,.packages=c("expm","stats")) %dopar%  {
+ estimated_orthobounds_bb[[j]]<-weighted_bb(mydata=leedata_week[[j]],B=Nboot,function_name=ortho_bounds_ss_wt,
+y.hat=y.hat,s.hat=s.hat,treat_helps=treat_helps)
+ estimated_orthobounds_CI[,j]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb[[j]]),ATE_est= estimated_orthobounds[,j],ci_alpha=ci_alpha)
+ res=cbind(estimated_orthobounds[,j],estimated_orthobounds_CI[,j])
+}
+
+myres_new<-rbind(matrix(0,8,2),myres_bb)
+estimated_orthobounds_CI<-matrix(0,nrow=4,ncol=length(weeks))
+for (j in 1:length(weeks)) {
+  estimated_orthobounds_CI[1:2,j]<-myres_new[(2*j-1):(2*j),1]
+  estimated_orthobounds_CI[3:4,j]<-myres_new[(2*j-1):(2*j),2]
+}
+
+
+colnames(estimated_orthobounds_CI)<-paste0("week_",weeks)
+rownames(estimated_orthobounds_CI)<-c("lower_bound","upper_bound","lower_bound_CI","upper_bound_CI")
+
+
+
+write.csv(estimated_orthobounds_CI,paste0("Estimated_Bounds/estimated_orthobounds_monotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".csv"))
+save.image(paste0("Estimated_Bounds/estimated_orthobounds_monotone_",selection_function_name,"_",as.character(quantile_grid_size),"_weeks_",min_week,"_",max_week,".RData"))
