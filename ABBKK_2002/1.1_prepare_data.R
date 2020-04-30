@@ -9,7 +9,7 @@ tab5_test_scores<-read.sas7bdat(paste0(my_path,"/ABBKK_2002/data/tab5v1.sas7bdat
 fulldata_2002_scores<-left_join(fulldata_2002,tab5_test_scores[,c("ID","DAD_MISS", "MOM_MISS", "MATH",     "READING",  "WRITING","TOTALPTS",
                                                                   "TSITE1",   "TSITE2" ,  "TSITE3"  )],
                                 by=c("ID"="ID"))
-
+#### HANDLING MISSING VALUES IN COVARIATES #################
 fulldata_2002_scores<-filter(fulldata_2002_scores,BOG95==1  & (!is.na(VOUCH0)) & !is.na(AGE2))
 fulldata_2002_scores$MOM_AGE_IS_NA<-is.na(fulldata_2002_scores$MOM_AGE)
 fulldata_2002_scores$DAD_AGE_IS_NA<-is.na(fulldata_2002_scores$DAD_AGE)
@@ -34,7 +34,7 @@ fulldata_2002_scores$READING[is.na(fulldata_2002_scores$READING)]<-0
 fulldata_2002_scores$WRITING[is.na(fulldata_2002_scores$WRITING)]<-0
 
 ### dropped DAREA and STRATA codes that had <0.001 non-zero cases in data
-## 
+## example :DAREA3
 summary(fulldata_2002_scores$DAREA3)
 exogenous_covariates<-c("AGE2","SEX_NAME","MOM_SCH" ,"MOM_AGE","DAD_SCH" ,"DAD_AGE",
                         "DAREA4",   "DAREA5",   "DAREA6",   "DAREA7",
