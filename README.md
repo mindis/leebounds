@@ -1,5 +1,7 @@
 # leebounds
-This package provides various methods to construct bounds on the Average Treatment Effect (ATE) in the presence of endogeneous selection into the sample. 
+This R package implements covariate-enhanced versions of https://academic.oup.com/restud/article-abstract/76/3/1071/1590707
+
+various methods to construct bounds on the Average Treatment Effect (ATE) in the presence of endogeneous selection into the sample. 
 
 
 # Installation
