@@ -20,4 +20,4 @@ replicates Columns 2,3,4 from Table ABBKK
 
 ```estimate_lasso_bounds.R``` 
 
-replicates Columns 5,6 from Table ABBKK. Output log is Table_ABBKK_2002.txt. Required R libraries are: ```hdm``` and ```expm``
+replicates Columns 5,6 from Table ABBKK. Output log is Table_ABBKK_2002.txt. Required R libraries are: ```hdm``` and ```expm```
