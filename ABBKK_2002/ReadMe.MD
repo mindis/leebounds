@@ -12,7 +12,7 @@ The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimat
 
 -- adds indicator of missigness for each baseline covariate. Required R libraries are: ```tidyverse```
 
-### Step 2: Estimate bounds. 
+### Step 2: Estimate bounds 
 
 ```estimate_bounds.R```  
 
