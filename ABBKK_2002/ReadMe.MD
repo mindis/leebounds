@@ -5,12 +5,8 @@ The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimat
 
 Step 1: Basic data preparation
 ```prepare_data.R```
-
-     --- takes the raw files from [Angrist Data Archive](https://economics.mit.edu/faculty/angrist/data1/data/angetal02)
-         The files are ```aerdat4.sas7bdat``` (core dataset) and ```tab5v1.sas7bdat``` (test scores for test-takers only).
-     --- merges the two files by `ID`
-     --- adds missingness indicators for each baseline covariate
-     
+-- takes ```aerdat4.sas7bdat``` (core dataset) and ```tab5v1.sas7bdat``` (test scores for test-takers only) from 
+[Angrist Data Archive](https://economics.mit.edu/faculty/angrist/data1/data/angetal02)
 Step 2: Estimate bounds
  
    
