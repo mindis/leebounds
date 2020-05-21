@@ -6,6 +6,8 @@ The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimat
 Step 1: Basic data preparation
 ```prepare_data.R```  
 
+-- takes ```aerdat4.sas7bdat``` (core dataset) and ```tab5v1.sas7bdat``` (test scores for test-takers only) from 
+[Angrist Data Archive](https://economics.mit.edu/faculty/angrist/data1/data/angetal02)
 
 Step 2: Estimate bounds
  
