@@ -9,6 +9,10 @@ Step 1: Basic data preparation
 -- takes ```aerdat4.sas7bdat``` (core dataset) and ```tab5v1.sas7bdat``` (test scores for test-takers only) from 
 [Angrist Data Archive](https://economics.mit.edu/faculty/angrist/data1/data/angetal02)
 
+-- merges them by ```ID```
+
+-- adds indicator of missigness for each baseline covariate
+
 Step 2: Estimate bounds
  
    
