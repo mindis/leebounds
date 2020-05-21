@@ -1,5 +1,7 @@
 # leebounds
-This package provides various methods to construct bounds on the Average Treatment Effect (ATE) in the presence of endogeneous selection into the sample. 
+This R package implements covariate-enhanced versions of https://academic.oup.com/restud/article-abstract/76/3/1071/1590707
+
+various methods to construct bounds on the Average Treatment Effect (ATE) in the presence of endogeneous selection into the sample. 
 
 
 # Installation
@@ -21,6 +23,3 @@ David Lee "Training, wages, and sample selection: Estimating sharp bounds on tre
 Vira Semenova "Machine Learning for Set-Identified Linear Models" https://arxiv.org/abs/1712.10024 November 2019
 # Support
 Vira Semenova: semenovavira@gmail.com
-# Useful resources to write your own R packages
-This is my first R package! It was built using the following resources:
-http://tinyheero.github.io/jekyll/update/2015/07/26/making-your-first-R-package.html
