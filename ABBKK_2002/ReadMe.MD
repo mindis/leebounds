@@ -2,7 +2,7 @@ This archive contains scripts used in Semenova (2020) "Better Lee Bounds" to rep
 
 The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimate_Bounds.
 
-Step 1: Basic data preparation
+### Step 1: Basic data preparation
 ```prepare_data.R```  
 
 -- takes ```aerdat4.sas7bdat``` (core dataset) and ```tab5v1.sas7bdat``` (test scores for test-takers only) from 
@@ -12,7 +12,7 @@ Step 1: Basic data preparation
 
 -- adds indicator of missigness for each baseline covariate
 
-Step 2: Estimate bounds. Output log is T
+### Step 2: Estimate bounds. Output log is T
 
 ```estimate_bounds.R```  
 
