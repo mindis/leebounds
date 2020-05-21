@@ -1,5 +1,4 @@
-This archive contains scripts used in Semenova (2020) "Better Lee Bounds" to replicate Table "Estimate effects of PACES voucher 
-on test scores".
+This archive contains scripts used in Semenova (2020) "Better Lee Bounds" to replicate Table "Estimate effects of PACES voucher  on test scores" (Table ABBKK)
 
 The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimate_Bounds.
 
@@ -13,6 +12,12 @@ Step 1: Basic data preparation
 
 -- adds indicator of missigness for each baseline covariate
 
-Step 2: Estimate bounds
- 
-   
+Step 2: Estimate bounds. Output log is T
+
+```estimate_bounds.R```  
+
+replicates Columns 2,3,4 from Table ABBKK
+
+```estimate_lasso_bounds.R``` 
+
+replicates Columns 5,6 from Table ABBKK
