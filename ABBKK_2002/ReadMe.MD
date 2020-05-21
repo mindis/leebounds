@@ -12,7 +12,7 @@ The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimat
 
 -- adds indicator of missigness for each baseline covariate
 
-### Step 2: Estimate bounds. Output log is T
+### Step 2: Estimate bounds. Output log is Table_ABBKK_2002.txt
 
 ```estimate_bounds.R```  
 
