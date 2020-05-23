@@ -21,6 +21,6 @@ Rscript estimate_bounds.R
 
 replicates Columns 2,3,4,5 from Table ABBKK
 
-```estimate_lasso_bounds.R``` 
+```Rscript estimate_lasso_bounds.R``` 
 
 replicates Columns 6,7 from Table ABBKK. Output log is Table_ABBKK_2002.txt. Required R libraries are: ```hdm``` and ```expm```
