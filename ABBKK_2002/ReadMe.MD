@@ -10,14 +10,9 @@ The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimat
 
 -- merges them by ```ID```
 
--- adds indicator of missigness for each baseline covariate. Required R libraries are: ```tidyverse```
+-- adds indicator of missigness for each baseline covariate. Required R libraries are: ```tidyverse``` and ```sas7bdat'''
 
 ### Step 2: Estimate bounds 
 
-```estimate_bounds.R```  
-
-replicates Columns 2,3,4 from Table ABBKK
-
-```estimate_lasso_bounds.R``` 
-
-replicates Columns 5,6 from Table ABBKK. Output log is Table_ABBKK_2002.txt. Required R libraries are: ```hdm``` and ```expm```
+```module load R
+Rscript estimate_bounds.R```  
