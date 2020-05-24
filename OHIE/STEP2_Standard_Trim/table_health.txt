@@ -1,0 +1,35 @@
+[1] "Panel A. Discrete Outcomes"
+[1] "Columns 1-2: Control Mean"
+                              none    standard
+[1,] "health_genflip_bin_12m" "0.548" "0.602" 
+[2,] "health_notpoor_12m"     "0.86"  "0.944" 
+[3,] "health_chgflip_bin_12m" "0.714" "0.781" 
+[4,] "nodep_screen_12m"       "0.671" "0.742" 
+[1] "Columns 4-5: ITT"
+                              none     standard 
+[1,] "health_genflip_bin_12m" "0.0387" "-0.0129"
+[2,] "health_notpoor_12m"     "0.0288" "-0.0515"
+[3,] "health_chgflip_bin_12m" "0.0328" "-0.0323"
+[4,] "nodep_screen_12m"       "0.0227" "-0.045" 
+[1] "Columns 7-8: LATE"
+                              none     standard 
+[1,] "health_genflip_bin_12m" "0.1329" "-0.0444"
+[2,] "health_notpoor_12m"     "0.099"  "-0.1742"
+[3,] "health_chgflip_bin_12m" "0.1128" "-0.1106"
+[4,] "nodep_screen_12m"       "0.0783" "-0.1538"
+[1] "Panel B. Continuous Outcomes"
+[1] "Columns 1-2: Control Mean"
+                           none     standard
+[1,] "notbaddays_phys_12m" "20.329" "21.99" 
+[2,] "notbaddays_tot_12m"  "21.862" "23.363"
+[3,] "notbaddays_ment_12m" "18.738" "20.283"
+[1] "Columns 4-5: ITT"
+                           none     standard 
+[1,] "notbaddays_phys_12m" "0.4592" "-1.1647"
+[2,] "notbaddays_tot_12m"  "0.381"  "-1.0306"
+[3,] "notbaddays_ment_12m" "0.6029" "-0.8603"
+[1] "Columns 7-8: LATE"
+                           none     standard 
+[1,] "notbaddays_phys_12m" "1.5854" "-3.9932"
+[2,] "notbaddays_tot_12m"  "1.3171" "-3.4989"
+[3,] "notbaddays_ment_12m" "2.082"  "-2.969" 
