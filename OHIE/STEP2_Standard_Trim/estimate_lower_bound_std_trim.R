@@ -94,8 +94,8 @@ trimming_value_all_names<-rep(0,length(all_names))
 trimming_value_all_names[grep("cost",all_names)]<-1
 
 flag_discrete_all_names<-rep(TRUE,length(all_names))
-flag_discrete_all_names[grep("notbadddays",all_names)]<-FALSE
-flag_discrete_all_names[grep("cost*owe|cost*oop",all_names)]<-FALSE
+flag_discrete_all_names[13:15]<-FALSE
+flag_discrete_all_names[5:12]<-FALSE
 
 for (i in 1:length(all_names)) {
   outcome_name =all_names[i]
@@ -148,7 +148,7 @@ for (i in 1:length(all_names)) {
 table_control_means_notrim
 table_control_means_basic_trim
 
-################# REPLICATE COLUMN 2 and 6 (ITT) ###################
+################# REPLICATE COLUMN 2 and 5 (ITT) ###################
 
 
 for (i in 1:length(all_names)) {
@@ -169,7 +169,7 @@ for (i in 1:length(all_names)) {
   table_itt_basic_trim[i,2]<-round(summary(res)[2,2],4)
 }
 
-################# REPLICATE COLUMN 3 (LATE) ###################
+################# REPLICATE COLUMN 3 and 6 (LATE) ###################
 
 
 for (i in 1:length(all_names)) {
@@ -205,7 +205,9 @@ table_notrim<-cbind(table_estimates_notrim,table_sd_notrim)
 table_estimates_basic_trim<-data.frame(control_mean=table_control_means_basic_trim[,1],
                                        itt_mean=table_itt_basic_trim[,1],
                                        late_mean=table_late_basic_trim[,1])
-
+#non-trimming robust standard error
+## computed for reference 
+## correct (trimming-robust) standard error is computed in bootstrap_lower_bound_std_trim.R
 table_sd_basic_trim<-data.frame(control_mean_sd=table_control_means_basic_trim[,2],
                                 itt_sd=table_itt_basic_trim[,2],
                                 late_sd=table_late_basic_trim[,2])
@@ -215,47 +217,3 @@ write.csv(table_notrim,paste0(my_path,"/OHIE/STEP2_Standard_Trim/csv/estimates_n
 write.csv(table_basic_trim,paste0(my_path,"/OHIE/STEP2_Standard_Trim/csv/estimates_basic_trim.csv"))
 
 
-#### print table 12 into log file
-sink(paste0(my_path,"/OHIE/STEP2_Standard_Trim/table_utilization.txt"),append=FALSE)
-print("Panel A. Extensive Margin")
-print("Columns 1-2: Control Mean")
-print (cbind( rownames(table_estimates_notrim)[16:19], none=table_estimates_notrim[16:19,1],standard=table_estimates_basic_trim[16:19,1]))
-print("Columns 4-5: ITT")
-print (cbind( rownames(table_estimates_notrim)[16:19], none=table_estimates_notrim[16:19,2],standard=table_estimates_basic_trim[16:19,2]))
-print("Columns 7-8: LATE")
-print (cbind( rownames(table_estimates_notrim)[16:19], none=table_estimates_notrim[16:19,3],standard=table_estimates_basic_trim[16:19,3]))
-
-print("Panel B. Total Utilization")
-print("Columns 1-2: Control Mean")
-print (cbind( rownames(table_estimates_notrim)[1:4], none=table_estimates_notrim[1:4,1],standard=table_estimates_basic_trim[1:4,1]))
-print("Columns 4-5: ITT")
-print (cbind( rownames(table_estimates_notrim)[1:4], none=table_estimates_notrim[1:4,2],standard=table_estimates_basic_trim[1:4,2]))
-print("Columns 7-8: LATE")
-print (cbind( rownames(table_estimates_notrim)[1:4], none=table_estimates_notrim[1:4,3],standard=table_estimates_basic_trim[1:4,3]))
-
-
-sink(file=NULL)
-closeAllConnections()
-
-
-#### print table 12 into log file
-sink(paste0(my_path,"/OHIE/STEP2_Standard_Trim/table_health.txt"),append=FALSE)
-print("Panel A. Discrete Outcomes")
-print("Columns 1-2: Control Mean")
-print (cbind( rownames(table_estimates_notrim)[24:27], none=table_estimates_notrim[24:27,1],standard=table_estimates_basic_trim[24:27,1]))
-print("Columns 4-5: ITT")
-print (cbind( rownames(table_estimates_notrim)[24:27], none=table_estimates_notrim[24:27,2],standard=table_estimates_basic_trim[24:27,2]))
-print("Columns 7-8: LATE")
-print (cbind( rownames(table_estimates_notrim)[24:27], none=table_estimates_notrim[24:27,3],standard=table_estimates_basic_trim[24:27,3]))
-
-print("Panel B. Continuous Outcomes")
-print("Columns 1-2: Control Mean")
-print (cbind( rownames(table_estimates_notrim)[13:15], none=table_estimates_notrim[13:15,1],standard=table_estimates_basic_trim[13:15,1]))
-print("Columns 4-5: ITT")
-print (cbind( rownames(table_estimates_notrim)[13:15], none=table_estimates_notrim[13:15,2],standard=table_estimates_basic_trim[13:15,2]))
-print("Columns 7-8: LATE")
-print (cbind( rownames(table_estimates_notrim)[13:15], none=table_estimates_notrim[13:15,3],standard=table_estimates_basic_trim[13:15,3]))
-
-
-sink(file=NULL)
-closeAllConnections()
