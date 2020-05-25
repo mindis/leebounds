@@ -1,6 +1,7 @@
+
 ### Stage 1: estimate selection
-estimate_selection<-function(leedata,form,selection_function,variables_for_selection=NULL,names_to_include=c(),
-                             treat_name="treat+",...) {
+estimate_selection<-function(leedata,form,selection_function,selection_function_name,variables_for_selection=NULL,names_to_include=c(),
+                             treat_name="treat+",yname="selection",myweights=NULL,...) {
   ### read in data
   d<-leedata$treat
   s<-leedata$selection
@@ -15,8 +16,11 @@ estimate_selection<-function(leedata,form,selection_function,variables_for_selec
     
   }
   
+  if (is.null(myweights)) {
+    myweights<-rep(1,dim(leedata)[1])
+  }
   
-  
+  if (selection_function_name=="rlassologit") {
   glm.fit<-selection_function(form, leedata[,variables_for_selection],family="binomial",...)
   # select non-zero coefficients
   non_zero_coefs<-glm.fit$coefficients[glm.fit$coefficients!=0]
@@ -28,14 +32,14 @@ estimate_selection<-function(leedata,form,selection_function,variables_for_selec
   
   # if treatment was dropped, make sure to re-run low-dim analysis with treatment
   if (length(selected_names)>0) {
-    form<-as.formula(paste0("selection~",treat_name,paste0(selected_names,collapse="+")))
+    form<-as.formula(paste0(yname,"~",treat_name,paste0(selected_names,collapse="+")))
   } else {
-    form<-as.formula("selection~treat")
+    form<-as.formula(paste0(yname,"~",treat_name))
   }
-  
-  
+  }
   ### final stage is always logistic with low-dim covariates
-  glm.postlasso<-glm( form,leedata[,variables_for_selection],family="binomial")
+  leedata$myweights<-myweights
+  glm.postlasso<-glm( form,data=leedata[,c("myweights",variables_for_selection)],family="binomial",weights = myweights)
   
   
   return(glm.postlasso)

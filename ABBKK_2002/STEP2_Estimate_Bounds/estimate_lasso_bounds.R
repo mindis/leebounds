@@ -70,6 +70,7 @@ form_nonmonotone<-as.formula("selection ~ (treat+AGE2 + SEX_NAME +MOM_SCH + MOM_
                            +MOM_AGE_IS_NA+DAD_AGE_IS_NA)")
 glm.fit<-estimate_selection(form=form_nonmonotone,leedata=leedata_cov,
                             selection_function=rlassologit,
+                            selection_function_name="rlassologit",
                             variables_for_selection =setdiff(colnames(leedata_cov),"outcome") )
 s.hat<-predict_selection(glm.fit,leedata_cov[,c("treat","selection",exogenous_covariates)])
 s.hat<-data.frame(s.0.hat=s.hat$s.0.hat, s.1.hat=s.hat$s.1.hat)
