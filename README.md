@@ -1,5 +1,5 @@
 # leebounds
-This R package implements sharp bounds on treatments effects in the presence of selection/nonresponse bias in randomized control trials. It includes basic Lee bounds  [Lee (2009)](https://academic.oup.com/restud/article-abstract/76/3/1071/1590707) and sharp bounds based on machine learning [Semenova(2019)](https://arxiv.org/abs/1712.10024). See vignette ```leebounds``` for description of the package (available through vignette("leebounds") once package is installed), and the package manual for documentation of the package functions.
+This R package implements sharp bounds on treatments effects in the presence of selection/nonresponse bias in randomized control trials. It includes basic Lee bounds  [Lee (2009)](https://academic.oup.com/restud/article-abstract/76/3/1071/1590707) and sharp bounds based on machine learning [Semenova(2019)](https://arxiv.org/abs/1712.10024). See vignette ```leebounds``` for description of the package (available through ```vignette("leebounds")``` once package is installed), and the package manual for documentation of the package functions.
 
 # Installation
 ```
