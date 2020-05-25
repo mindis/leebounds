@@ -1,8 +1,5 @@
 # leebounds
-This R package implements covariate-enhanced versions of https://academic.oup.com/restud/article-abstract/76/3/1071/1590707
-
-various methods to construct bounds on the Average Treatment Effect (ATE) in the presence of endogeneous selection into the sample. 
-
+This R package implements sharp bounds on treatments effects in the presence of selection/nonresponse bias in randomized control trials. It includes basic Lee bounds  [Lee (2009)](https://academic.oup.com/restud/article-abstract/76/3/1071/1590707) and sharp bounds based on machine learning [Semenova(2019)](https://arxiv.org/abs/1712.10024). See vignette ```leebounds``` for description of the package (available through ```vignette("leebounds")``` once package is installed), and the package manual for documentation of the package functions.
 
 # Installation
 ```
@@ -17,9 +14,5 @@ library(leebounds)
 leedata=data.frame(treat=JobCorps_baseline$TREATMNT.y,selection=JobCorps_employment$week_208,outcome=JobCorps_wages$week_208)
 leebounds(leedata)
 ```
-# References
-David Lee "Training, wages, and sample selection: Estimating sharp bounds on treatment effects" Review of Economic Studies, 76(3):1071–1102.
-
-Vira Semenova "Machine Learning for Set-Identified Linear Models" https://arxiv.org/abs/1712.10024 November 2019
 # Support
 Vira Semenova: semenovavira@gmail.com
