@@ -38,7 +38,8 @@ Rscript evidence_against_monotonicity.R
 ```
 computes estimates for Figure 1,2  
 ```
-Rscript estimate_bounds_plb_nontreated_wage.R
+Rscript estimate_bounds_plb.R
+Rscript estimate_bounds_nontreated_wage.R
 ```
 computes estimates for Figure 3,5
 ### Step 4. Print Figures
