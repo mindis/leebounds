@@ -25,8 +25,7 @@ Rscript bootstrap_lower_bound_std_trim.R
 computes estimated lower bound and standard errors for Medicaid effect on various outcomes of interest. Saves output to csv/ 
 
 
-### Step 3. Step 2: Estimate lower bound on Medicaid effect (ITT and LATE frameworks) based on additional covariates selected by 
-machine learning
+### Step 3. Estimate lower bound on Medicaid effect (ITT and LATE frameworks) based on additional covariates selected by machine learning
 
 ```
 Rscript estimate_lower_bound_ml.R
