@@ -1,3 +1,4 @@
+
 [1] 3610   40
 [1] "Parameters:"
 [1] "Confidence level 0.05"
@@ -67,7 +68,6 @@
 [1] "Selected covariates for test participation are STRATA2 MOM_AGE_IS_NA MOM_AGE AGE2 DAD_AGE_IS_NA MOM_SCH DAREA11 DAREA17 DAREA19 DAD_AGE"
 [1] "Selecting covariates for test score by post-lasso"
 [1] "Selected covariates for test score are AGE2 DAD_SCH DAREA6 MOM_SCH DAREA4 MOM_SCH_IS_NA DAD_AGE MOM_AGE_IS_NA DAREA15"
-[1] "Selected covariates for test score are AGE2 DAD_SCH DAREA6 MOM_SCH DAREA4 MOM_SCH_IS_NA DAD_AGE MOM_AGE_IS_NA DAREA15"
 [1] "Column 6"
 [1] "Panel A: MATH, Estimate: [0.045 0.078]"
 [1] "Panel A: MATH, CR: (-0.331 0.419)"
@@ -76,12 +76,12 @@
 [1] "Panel C: WRITING,  Estimate: [0.094 0.086]"
 [1] "Panel C: WRITING   CR: (-0.24 0.421)"
 [1] "Column 7"
-[1] "Panel A: MATH, Estimate: [0.241 0.531]"
-[1] "Panel A: MATH, CR: (0.048 3.644)"
-[1] "Panel B: READING, Estimate: [0.184 0.558]"
-[1] "Panel B: READING  CR: (0.046 1.214)"
-[1] "Panel C: WRITING,  Estimate: [0.047 0.362]"
-[1] "Panel C: WRITING   CR: (0.036 1.527)"
+[1] "Panel A: MATH, Estimate: [0.482 0.648]"
+[1] "Panel A: MATH, CR: (0.13 1.811)"
+[1] "Panel B: READING, Estimate: [0.468 0.535]"
+[1] "Panel B: READING  CR: (0.133 3.605)"
+[1] "Panel C: WRITING,  Estimate: [0.501 0.583]"
+[1] "Panel C: WRITING   CR: (0.162 1.362)"
 [1] "Width computation: Column 6"
    MATH READING WRITING 
   0.033  -0.003  -0.007 
@@ -89,7 +89,6 @@
               0.749               0.643               0.662 
 [1] "Width computation: Column 7"
    MATH READING WRITING 
-  0.291   0.374   0.315 
+  0.166   0.067   0.082 
    MATH.97.5% READING.97.5% WRITING.97.5% 
-        3.596         1.168         1.491 
-
+        1.681         3.472         1.200 

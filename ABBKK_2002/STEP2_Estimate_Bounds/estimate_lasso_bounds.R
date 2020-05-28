@@ -142,32 +142,39 @@ for (subject in c("MATH","READING","WRITING")) {
   ### subjects with positive lower bound
   
 }
-vars_for_plb<-grep("STRATA",exogenous_covariates,value=TRUE)
+vars_for_plb<-c("MOM_AGE_IS_NA","MOM_AGE","MOM_SCH","MOM_SCH_IS_NA")
 CR_plb<-list()
+estimates_bb_list<-list()
+N_rep=200
 for (subject in c("MATH","READING","WRITING")) {
   
   leedata$outcome<-mydata[,subject]
   leedata_cov<-cbind(leedata,mydata[,exogenous_covariates])
   
-  first_stage<-first_stage_wrapper(leedata_cov=leedata_cov,
-                                   s.hat=s.hat.lasso,
-                                   quantile_grid_size = quantile_grid_size,
-                                   variables_for_outcome=vars_for_plb)
-  first_stage_list[[subject]]<-first_stage
-  
-  res<-summary_subjects_positive_lower_bound(leedata_cov[,c("treat","outcome","selection",vars_for_plb)],s.hat=s.hat.lasso,
-                                              y.hat=first_stage_list[[subject]]$y.hat,
-                                              form_outcome_plb=as.formula("outcome~."))
+  res<-summary_subjects_positive_lower_bound(leedata_cov[,c("treat","outcome","selection",vars_for_plb)],
+                                             form_selection = paste0("selection~(treat)*(",paste0(vars_for_plb,collapse="+"),")"),
+                                             selection_function_name="glm",
+                                             quantile_grid_size = quantile_grid_size,
+                                             variables_for_outcome=vars_for_plb,
+                                             form_outcome_plb=as.formula("outcome~."))
   
   estimates_plb[[subject]]<-GetBounds(res)
   frac_positive[[subject]]<-GetFraction(res)
   
-  estimates_bb<-weighted_bb(leedata_cov[,c("treat","outcome","selection",vars_for_plb)],s.hat=s.hat.lasso,
-                            y.hat=first_stage_list[[subject]]$y.hat,
+  
+  
+  estimates_bb_list[[subject]]<-weighted_bb(leedata_cov[,c("treat","outcome","selection",vars_for_plb)],
+                            form_selection = paste0("selection~(treat)*(",paste0(vars_for_plb,collapse="+"),")"),
+                            selection_function_name="glm",
+                            quantile_grid_size = quantile_grid_size,
+                            variables_for_outcome=vars_for_plb,
                             form_outcome_plb=as.formula("outcome~."),function_name = summary_subjects_positive_lower_bound,B=N_rep)
- 
-  CR_plb[[subject]]<-c(quantile(t(  estimates_bb)[,1],ci_alpha/2),quantile(t(  estimates_bb)[,2],1-ci_alpha/2) )
+  
+  estimates_bb<- estimates_bb_list[[subject]]
+  estimates_bb<-estimates_bb[, !is.na(apply(estimates_bb,2,sum))]
+  CR_plb[[subject]]<-c(quantile(t(  estimates_bb)[,1],ci_alpha/2,na.rm=TRUE),quantile(t(  estimates_bb)[,2],1-ci_alpha/2,na.rm=TRUE) )
 }
+
 
 
 
