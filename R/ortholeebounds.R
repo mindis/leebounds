@@ -6,6 +6,7 @@ first_stage_wrapper<-function(leedata_cov,
                               variables_for_outcome,
                               quantile_grid_size,
                               sort_quantiles=TRUE,
+                              s.hat=NULL,
                               ...) {
   sample_size<-dim(leedata_cov)[1]
   if (is.null(weights)) {
@@ -24,12 +25,12 @@ first_stage_wrapper<-function(leedata_cov,
     
   } else {
     
-    res_selection<-estimate_selection(leedata_cov,...)
-    
+    glm.fit<-estimate_selection(leedata_cov,...)
+    res_selection<-predict_selection(glm.fit,leedata_cov,...)
     s.0.hat<-res_selection$s.0.hat
     s.1.hat<-res_selection$s.1.hat
     s.hat<-data.frame(s.0.hat=s.0.hat,s.1.hat=s.1.hat)
-    p.0.hat<-s.0.hat/s.1.hat
+    p.0.star<-s.0.hat/s.1.hat
   }
   p.0.star<-(s.0.hat/s.1.hat)
   inds_helps<-(p.0.star<=1)
@@ -39,6 +40,7 @@ first_stage_wrapper<-function(leedata_cov,
   } 
   
   if (mean(p.0.star>1)>=p0_cuttoff) {
+    print("cutoff")
     p.0.star<-sapply(p.0.star,max,1.0001)
   } 
   inds_helps<-(p.0.star<=1)
@@ -50,7 +52,8 @@ first_stage_wrapper<-function(leedata_cov,
       
       estimated_quantiles_11<-estimate_quantile_regression(training_data=leedata_cov[leedata_cov$treat==1 & leedata_cov$selection==1,],
                                                            test_data=leedata_cov,
-                                                           variables_for_outcome=variables_for_outcome,quantile_grid_size=quantile_grid_size,...  )
+                                                           variables_for_outcome=variables_for_outcome,quantile_grid_size=quantile_grid_size,
+                                                           myweights=weights[leedata_cov$treat==1 & leedata_cov$selection==1],...  )
       y.hat.helps=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantiles_11[inds_helps,],p.0.hat=p.0.star[inds_helps],
                                           quantile_grid_size=quantile_grid_size,sort_quantiles=sort_quantiles,...)
       y.hat$y.p0.hat[inds_helps]<-y.hat.helps$y.p0.hat
@@ -63,7 +66,8 @@ first_stage_wrapper<-function(leedata_cov,
       estimated_quantiles_10<-estimate_quantile_regression(training_data=leedata_cov[leedata_cov$treat==0 & leedata_cov$selection==1,],
                                                            test_data=leedata_cov,
                                                            variables_for_outcome=variables_for_outcome,
-                                                           quantile_grid_size=quantile_grid_size,...  )
+                                                           quantile_grid_size=quantile_grid_size,
+                                                           myweights=weights[leedata_cov$treat==0 & leedata_cov$selection==1],...  )
       y.hat.hurts=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantiles_10[inds_hurts,],p.0.hat=1/p.0.star[inds_hurts],
                                           quantile_grid_size=quantile_grid_size,...)
       y.hat$y.p0.hat[inds_hurts]<-y.hat.hurts$y.p0.hat
@@ -79,11 +83,14 @@ first_stage_wrapper<-function(leedata_cov,
 }
 
 ### second stage
-second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights,...) {
+second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights=NULL,bounds_fun=ortho_bounds_ss_wt,...) {
+  if (is.null(weights)) {
+    weights<-rep(1,dim(leedata)[1])
+  }
   sample_size<-dim(leedata)[1]
   inds_hurts<-!inds_helps
   if (sum(inds_helps)>0){
-    res_helps<-ortho_bounds_ss_wt (leedata=leedata[ inds_helps,],
+    res_helps<-bounds_fun(leedata=leedata[ inds_helps,],
                                    treat_helps = TRUE,
                                    s.hat=s.hat[inds_helps,],
                                    weights=weights[inds_helps],y.hat=y.hat[inds_helps,],...)
@@ -97,7 +104,7 @@ second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights,...) {
   
   
   if (sum(inds_hurts)>0){
-    res_hurts<-ortho_bounds_ss_wt (leedata=leedata[ inds_hurts,],
+    res_hurts<-bounds_fun (leedata=leedata[ inds_hurts,],
                                    treat_helps = FALSE,
                                    s.hat=s.hat[inds_hurts,],
                                    y.hat=y.hat[inds_hurts,],weights=weights[inds_hurts],...)
@@ -124,17 +131,42 @@ second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights,...) {
   ))
 }
 
+
+
+ortho_leebounds<-function(leedata_cov,s.hat=NULL,...) {
+  fs<-first_stage_wrapper(leedata_cov,s.hat=s.hat,...)
+  res<-second_stage_wrapper(leedata=leedata_cov,
+                            inds_helps=fs$inds_helps,y.hat=fs$y.hat,s.hat=fs$s.hat,...)
+  res$inds_helps<-fs$inds_helps
+  res$y.hat<-fs$y.hat
+  res$s.hat<-fs$s.hat
+  return (res)
+
+}
+
+
+
 ### summary for subjects with positive lower bound
 
 
-summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y.hat,s.hat,eps=0.00001,max_p_hat=0.94,
+summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y.hat=NULL,s.hat=NULL,eps=0.00001,max_p_hat=0.94,
+                                                form_outcome=as.formula("outcome~."),form_selection=NULL,
                                                 ...) {
+  
   
   if (is.null(weights)) {
     weights_total<-rep(1,dim(leedata_cov_total)[1])
   } else {
     weights_total<-weights
   }
+  if (is.null (s.hat)) {
+    res<-first_stage_wrapper(leedata_cov=leedata_cov_total,weights=weights_total,form=form_selection,...)
+    
+    s.hat<-res$s.hat
+    y.hat<-res$y.hat
+  }
+  
+
   #weights<-weights/sum(weights)
   if (sum(is.na(weights))>0) {
     stop ("NA weights!")
@@ -165,18 +197,18 @@ summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y
     y.p0.hat<-y.hat$y.p0.hat[inds_helps]
     y.1.p0.hat<-y.hat$y.1.p0.hat[inds_helps]
     
-    lm0.fit<-lm(formula=as.formula("outcome~."),data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
+    lm0.fit<-lm(formula=form_outcome,data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
                 subset=(s==1 & d==0),
                 weights = weights)
     y0.hat<-predict(lm0.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("selection","outcome"))])
-    lm1.fit<-lm(formula=as.formula("outcome~."),
+    lm1.fit<-lm(formula=form_outcome,
                 leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
                 subset=s==1  & d==1 & sy<=y.p0.hat,
                 weights=weights)
     y1.hat<-predict( lm1.fit, leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))])
     treat_effect_lower_bound<-y1.hat-y0.hat
     
-    lm.up.fit<-lm(formula=as.formula("outcome~."),data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
+    lm.up.fit<-lm(formula=form_outcome,data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
                   subset=s==1  & d==1 & sy>=y.1.p0.hat,
                   weights=weights)
     y1.hat.up<-predict(lm.up.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))])
@@ -217,13 +249,13 @@ summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y
     prop1<-stats::weighted.mean(s[d==1]==1,w=weights[d==1])
     
     
-    lm1.fit<-lm(formula=as.formula("outcome~."),
+    lm1.fit<-lm(formula=form_outcome,
                 data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
                 subset=s==1 & d==1,
                 weights=weights)
     y1.hat<-predict(lm1.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("selection","outcome"))])
     
-    lm0.fit<-lm(formula=as.formula("outcome~."),
+    lm0.fit<-lm(formula=form_outcome,
                 data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
                 subset=s==1  & d==0 & sy>=y.1.p0.hat,
                 weights=weights)
@@ -232,7 +264,7 @@ summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y
     is_positive<-treat_effect_lower_bound>0
     
     
-    lm.low.fit<-lm(formula=as.formula("outcome~."),
+    lm.low.fit<-lm(formula=form_outcome,
                    data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
                    subset=s==1  & d==0 & sy<=y.p0.hat,
                    weights=weights)

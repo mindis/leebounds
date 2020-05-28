@@ -69,6 +69,7 @@ weighted_bb<-function(mydata,B,function_name,...) {
   
 }
 
+
 summary_stat_nonmonotone<-function(leedata_cov,p.0.star) {
   inds_helps<-(p.0.star<=1)
   inds_hurts<-(p.0.star>1)

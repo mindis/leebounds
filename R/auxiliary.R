@@ -45,7 +45,7 @@ estimate_selection<-function(leedata,form,selection_function,selection_function_
   return(glm.postlasso)
 }
 
-predict_selection<-function(fit,leedata) {
+predict_selection<-function(fit,leedata,...) {
   leedata_0treat<-leedata
   leedata_0treat$treat<-0
   
@@ -61,20 +61,23 @@ predict_selection<-function(fit,leedata) {
 ### Stage 1: estimate conditional quantile
 
 
-estimate_quantile_regression<-function(training_data,test_data,variables_for_outcome,distribution_functionname="rq",quantile_grid_size,...) {
+estimate_quantile_regression<-function(training_data,test_data,variables_for_outcome,distribution_functionname="rq",quantile_grid_size,myweights=NULL,...) {
   variables_for_outcome<-unique(c("outcome",setdiff(variables_for_outcome,c("treat","selection"))))
   #print(variables_for_outcome)
   #p<-length()
   taus=seq(0,1,quantile_grid_size)
   estimated_quantiles<-matrix(0,dim(test_data)[1],length(taus))
   
-  
+  if (is.null(myweights)) {
+    myweights<-rep(1,dim(training_data)[1])
+  }
+  training_data$myweights<-myweights
   ## everything else requires distribution regression
   if (distribution_functionname=="rq") {
     for (i in 1:(length(taus))) {
       
       tau<-taus[i]
-      q_model<-quantreg::rq(outcome~.,data=training_data[,variables_for_outcome],tau=tau )
+      q_model<-quantreg::rq(outcome~.,data=training_data[,variables_for_outcome],tau=tau,weights=myweights )
       estimated_quantiles[,i]<-predict(q_model,test_data[,variables_for_outcome])
     }
   } else {
@@ -255,5 +258,76 @@ ortho_bounds_ss_wt<-function(leedata,treat_helps,y.hat,s.hat,weights=NULL,s_min=
 #### Second stage
 
 
+ortho_bounds_nontreated_wage_ss<-function(leedata_cov,treat_helps,y.hat,s.hat,...) {
+  
+  d<-leedata_cov$treat
+  s<-leedata_cov$selection
+  sy<-leedata_cov$outcome
+  
+  
+  if (treat_helps) {
+    lower_bound_effect=mean(sy[d==0 & s==1])
+    upper_bound_effect=mean(sy[d==0 & s==1])
+  } else {
+    ## args: first-stage estimate
+    y.p0.hat<-y.hat$y.p0.hat
+    y.1.p0.hat<-y.hat$y.1.p0.hat
+    s.0.hat<-s.hat$s.0.hat
+    s.1.hat<-s.hat$s.1.hat
+    prop0<-mean(d==0)
+    prop1<-mean(d==1)
+    prop10<-mean(s==1&d==0)
+    prop11<-mean(s==1&d==1)
+    
+    
+    p.0.hat=s.1.hat/s.0.hat
+    p.0.hat=sapply(p.0.hat,min,1)
+    
+    y_nontrim<-sy[d==1 & s==1]
+    trimmed_mean_upper<-mean((1-d)*s*sy*(sy>=y.1.p0.hat))*prop1/prop0/prop11
+    trimmed_mean_lower<-mean((1-d)*s*sy*(sy<=y.p0.hat))*prop1/prop0/prop11
+    
+    
+    gamma1x<-(y.1.p0.hat)*p.0.hat*prop1/prop11
+    gamma2x<-(-1)*y.1.p0.hat*prop1/prop11
+    gamma3x<-(-1)*(y.1.p0.hat)*s.0.hat*prop1/prop11
+    
+    gamma4x<-y.p0.hat*p.0.hat*prop1/prop11
+    gamma5x<-(-1)*y.p0.hat*prop1/prop11
+    gamma6x<-(-1)*y.p0.hat*s.0.hat*prop1/prop11
+    
+    alpha1x<-(1-d)*s/prop0-s.0.hat
+    alpha2x<-d*s/prop1-s.1.hat
+    alpha3x<-as.numeric(sy<=y.1.p0.hat) - (1-p.0.hat)
+    
+    
+    alpha4x<-alpha1x
+    alpha5x<-alpha2x
+    alpha6x<-as.numeric(sy<=y.p0.hat) - p.0.hat
+    
+    A1<-sum(gamma1x*alpha1x) 
+    A2<-sum(gamma2x*alpha2x) 
+    A3<-sum(gamma3x[d==0 & s==1]*alpha3x[d==0 & s==1])
+    
+    
+    A4<-sum(gamma4x*alpha4x) 
+    A5<-sum(gamma5x*alpha5x)
+    A6<-sum(gamma6x[d==0 & s==1]*alpha6x[d==0 & s==1])
+    
+    lower_bias_correction<-(A4+A5+A6)/length(d)
+    upper_bias_correction<-(A1+A2+A3)/length(d)
+    
+    lower_bound_effect=trimmed_mean_lower+lower_bias_correction
+    upper_bound_effect= trimmed_mean_upper+upper_bias_correction
+  }
+  
+  
+  
+  res<-list(lower_bound=lower_bound_effect,
+            upper_bound=upper_bound_effect
+            
+  )
+  return(res)
+}
 
 
