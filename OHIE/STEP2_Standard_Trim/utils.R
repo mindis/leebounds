@@ -135,8 +135,6 @@ basic_trimming_subjects<-function(data,outcome_name,group_ind=NULL,trimming_valu
   ))
 }
 
-#### bootstrap function
-
 bootstrap_mean_itt_late<-function(b,outcome_name,weight_name,trimming_value,flag_discrete) {
   set.seed(b)
   N_unique_households<-length(unique(prepared_data_sample_12m$household_id))
@@ -144,9 +142,9 @@ bootstrap_mean_itt_late<-function(b,outcome_name,weight_name,trimming_value,flag
   hh_boot<-sample(unique(prepared_data_sample_12m$household_id),N_unique_households,replace=TRUE)
   prepared_data_sample_12m.boot<-inner_join(data.frame(household_id=hh_boot),prepared_data_sample_12m)
   
-  
+  prepared_data_sample_12m.boot.control<-prepared_data_sample_12m.boot[prepared_data_sample_12m.boot$treatment==0,]
   trimmed_data.boot<-matrix(0,nrow=0,dim(prepared_data_sample_12m.boot)[2])
-  if (TRUE) {
+
     for (j in 1:length(unique(prepared_data_sample_12m.boot$group_id)) ) {
       res<-basic_trimming_subjects(data=prepared_data_sample_12m.boot,
                                    outcome_name= outcome_name, 
@@ -165,19 +163,22 @@ bootstrap_mean_itt_late<-function(b,outcome_name,weight_name,trimming_value,flag
       
       
     } 
-  }
+  
   control_sample.boot<-as.data.frame(trimmed_data.boot[trimmed_data.boot$treatment==0,])
   table_control_means_basic_trim<-round(weighted.mean(control_sample.boot[,outcome_name] ,na.rm=TRUE,w=control_sample.boot[, weight_name]),3)
   
-  form<-paste0(outcome_name,"~treatment+",paste0(list_of_basic_qje_controls,collapse="+"))
+  table_control_means_notrim<-round(weighted.mean( prepared_data_sample_12m.boot.control[,outcome_name] ,na.rm=TRUE,w= prepared_data_sample_12m.boot.control[, weight_name]),3)
+  
+  form<-paste0(outcome_name,"~treatment+",paste0(stratification_controls,collapse="+"))
   trimmed_data.boot<-as.data.frame(trimmed_data.boot)
   res<-lm(formula=as.formula(form), data=trimmed_data.boot,weights=trimmed_data.boot[,weight_name])
   table_itt_basic_trim<-round(res$coefficients[2],4)
   
-  form<-paste0( paste0(outcome_name,"~ohp_all_ever_survey+",paste0(list_of_basic_qje_controls,collapse="+")),"|treatment+",paste0(list_of_basic_qje_controls,collapse="+"))
+  form<-paste0( paste0(outcome_name,"~ohp_all_ever_survey+",paste0(stratification_controls,collapse="+")),"|treatment+",paste0(stratification_controls,collapse="+"))
   res<-AER::ivreg(formula=as.formula(form), data=trimmed_data.boot[!is.na(trimmed_data.boot[,outcome_name]),],weights=trimmed_data.boot[!is.na(trimmed_data.boot[,outcome_name]),weight_name]  )
   table_late_basic_trim<-round(res$coefficients[2],4)
   
-  ans<-c(table_control_means_basic_trim,table_itt_basic_trim,table_late_basic_trim)
+  ans<-c(table_control_means_basic_trim,table_itt_basic_trim,table_late_basic_trim,table_control_means_notrim)
   return(ans)
 }
+

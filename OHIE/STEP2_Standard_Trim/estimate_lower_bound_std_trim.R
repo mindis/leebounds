@@ -28,7 +28,10 @@ print(round(table(prepared_data_sample_12m$group_id)/dim(prepared_data_sample_12
 prepared_data_sample_12m$group_id [prepared_data_sample_12m$group_id %in% c(16,17,18)]<-16
 unique_groups<-unique(prepared_data_sample_12m$group_id)
 prepared_data_sample_12m$group_id[prepared_data_sample_12m$group_id==16]<-3
-list_of_basic_qje_controls<-grep("ddd",colnames(prepared_data),value=TRUE)
+## covariates used for stratification
+stratification_controls<-grep("ddd",colnames(prepared_data),value=TRUE)
+
+
 weight_name<-"weight_12m"
 ############# OUTCOMES #########
 
@@ -133,17 +136,24 @@ print(max(abs(delta_after_trimming)))
 
 prepared_data_sample_12m<-as.data.frame(prepared_data_sample_12m)
 prepared_data_responded_control<-as.data.frame(prepared_data_responded_control)
+control_sample_size<-rep(NA,length(all_names))
+trimmed_sample_size<-rep(NA,length(all_names))
 for (i in 1:length(all_names)) {
   outcome_name =all_names[i]
   ## column 1 
   table_control_means_notrim[i,1]<-round(weighted.mean(prepared_data_responded_control[,outcome_name] ,na.rm=TRUE,w=prepared_data_responded_control[,weight_name]),3)
-  table_control_means_notrim[i,2]<-round(radiant.data::weighted.sd(prepared_data_responded_control[,outcome_name] ,na.rm=TRUE,w=prepared_data_responded_control[,weight_name]),3)
+  #table_control_means_notrim[i,2]<-round(radiant.data::weighted.sd(prepared_data_responded_control[,outcome_name] ,na.rm=TRUE,w=prepared_data_responded_control[,weight_name]),3)
+  form<-as.formula(paste0(outcome_name,"~1"))
+  res<-miceadds::lm.cluster(formula=as.formula(form), data=prepared_data_responded_control,weights=prepared_data_responded_control[,weight_name],
+                            cluster="household_id")
+  table_control_means_notrim[i,2]<-round(summary(res)[1,2],4)
+  control_sample_size[i]<-sqrt(sum(!is.na(prepared_data_responded_control[,outcome_name])))
   
   ## column 5 
   control_sample<-as.data.frame(trimmed_data[[i]][trimmed_data[[i]]$treatment==0,])
   table_control_means_basic_trim[i,1]<-round(weighted.mean(control_sample[,outcome_name] ,na.rm=TRUE,w=control_sample[, weight_name]),3)
   table_control_means_basic_trim[i,2]<-round(radiant.data::weighted.sd(control_sample[,outcome_name] ,na.rm=TRUE,w=control_sample[, weight_name] ),3)
-  
+  trimmed_sample_size[i]<-sqrt(sum(!is.na(control_sample[,outcome_name])))
 }
 table_control_means_notrim
 table_control_means_basic_trim
@@ -153,7 +163,7 @@ table_control_means_basic_trim
 
 for (i in 1:length(all_names)) {
   outcome_name =all_names[i]
-  form<-paste0(outcome_name,"~treatment+",paste0(list_of_basic_qje_controls,collapse="+"))
+  form<-paste0(outcome_name,"~treatment+",paste0(stratification_controls,collapse="+"))
   
   ## column 2
   res<-miceadds::lm.cluster(formula=as.formula(form), data=prepared_data_sample_12m,weights=prepared_data_sample_12m[,weight_name],
@@ -175,7 +185,7 @@ for (i in 1:length(all_names)) {
 for (i in 1:length(all_names)) {
   outcome_name =all_names[i]
   ## column 3
-  form<-paste0( paste0(outcome_name,"~ohp_all_ever_survey+",paste0(list_of_basic_qje_controls,collapse="+")),"|treatment+",paste0(list_of_basic_qje_controls,collapse="+"))
+  form<-paste0( paste0(outcome_name,"~ohp_all_ever_survey+",paste0(stratification_controls,collapse="+")),"|treatment+",paste0(stratification_controls,collapse="+"))
   res<-AER::ivreg(formula=as.formula(form), data=prepared_data_sample_12m[!is.na(prepared_data_sample_12m[,outcome_name]),],
                   weights=prepared_data_sample_12m[!is.na(prepared_data_sample_12m[,outcome_name]),weight_name]  )
   
@@ -201,7 +211,7 @@ table_sd_notrim<-data.frame(control_mean_sd=table_control_means_notrim[,2],
                             itt_sd=table_itt_notrim[,2],
                             late_sd=table_late_notrim[,2])
 
-table_notrim<-cbind(table_estimates_notrim,table_sd_notrim)
+table_notrim<-cbind(table_estimates_notrim,table_sd_notrim,control_sample_size=control_sample_size)
 table_estimates_basic_trim<-data.frame(control_mean=table_control_means_basic_trim[,1],
                                        itt_mean=table_itt_basic_trim[,1],
                                        late_mean=table_late_basic_trim[,1])
@@ -211,7 +221,7 @@ table_estimates_basic_trim<-data.frame(control_mean=table_control_means_basic_tr
 table_sd_basic_trim<-data.frame(control_mean_sd=table_control_means_basic_trim[,2],
                                 itt_sd=table_itt_basic_trim[,2],
                                 late_sd=table_late_basic_trim[,2])
-table_basic_trim<-cbind(table_estimates_basic_trim,table_sd_basic_trim)
+table_basic_trim<-cbind(table_estimates_basic_trim,table_sd_basic_trim,control_sample_size=trimmed_sample_size)
 
 write.csv(table_notrim,paste0(my_path,"/OHIE/STEP2_Standard_Trim/csv/estimates_no_trim.csv"))
 write.csv(table_basic_trim,paste0(my_path,"/OHIE/STEP2_Standard_Trim/csv/estimates_basic_trim.csv"))
