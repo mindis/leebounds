@@ -87,3 +87,35 @@ summary_stat_nonmonotone<-function(leedata_cov,p.0.star) {
   stats<-lapply(stats,round,3)
   return(stats)
 }
+
+solve_im<-function(x,IM,ci_alpha) {
+  return ( pnorm(x+IM)-pnorm(-x)-(1-ci_alpha))
+}
+
+imbens_manski<-function(ATE_boot, ATE_est, ci_alpha=0.05) {
+  Omega.hat<-matrix(0,2,2)
+  if (sum(is.na(ATE_boot))+sum(is.na(ATE_est))>0) {
+    return(c(lower_bound = NA, upper_bound=NA))
+  }
+  ATE_boot_centered<-matrix(0,dim(ATE_boot)[1],2)
+  ## Centered draws of lower bound
+  ATE_boot_centered[,1]<-ATE_boot[,1]-ATE_est[1]
+  ## Centered draws of upper bound
+  ATE_boot_centered[,2]<-ATE_boot[,2]-ATE_est[2]
+  
+  Omega.hat[1,1]<-var( ATE_boot_centered[,1])
+  Omega.hat[2,2]<-var(ATE_boot_centered[,2])
+  Omega.hat[1,2]<-cov(ATE_boot_centered[,1],ATE_boot_centered[,2])
+  Omega.hat[2,1]<-Omega.hat[1,2]
+  
+  width=ATE_est[2]-ATE_est[1]
+  IM=width/max(sqrt(Omega.hat[1,1]),sqrt(Omega.hat[2,2]))
+  C<-nleqslv::nleqslv(0,solve_im,IM=IM,ci_alpha=ci_alpha)
+  
+  lower_bound<-ATE_est[1]- C$x*sqrt(Omega.hat[1,1])
+  upper_bound<-ATE_est[2] +C$x*sqrt(Omega.hat[2,2])
+  
+  
+  return(c(lower_bound=lower_bound,upper_bound=upper_bound))
+  
+}

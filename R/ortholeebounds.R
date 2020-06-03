@@ -45,37 +45,37 @@ first_stage_wrapper<-function(leedata_cov,
   } 
   inds_helps<-(p.0.star<=1)
   inds_hurts<-(p.0.star>1)
-
+  
   y.hat<-data.frame(y.p0.hat=rep(NA,sample_size),y.1.p0.hat=rep(NA,sample_size))
-    if (sum(inds_helps)>0) {
-      
-      
-      estimated_quantiles_11<-estimate_quantile_regression(training_data=leedata_cov[leedata_cov$treat==1 & leedata_cov$selection==1,],
-                                                           test_data=leedata_cov,
-                                                           variables_for_outcome=variables_for_outcome,quantile_grid_size=quantile_grid_size,
-                                                           myweights=weights[leedata_cov$treat==1 & leedata_cov$selection==1],...  )
-      y.hat.helps=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantiles_11[inds_helps,],p.0.hat=p.0.star[inds_helps],
-                                          quantile_grid_size=quantile_grid_size,sort_quantiles=sort_quantiles,...)
-      y.hat$y.p0.hat[inds_helps]<-y.hat.helps$y.p0.hat
-      y.hat$y.1.p0.hat[inds_helps]<-y.hat.helps$y.1.p0.hat
-    } else {
-      estimated_quantiles_11<-NULL
-    }
+  if (sum(inds_helps)>0) {
     
-    if (sum(inds_hurts)>0) {
-      estimated_quantiles_10<-estimate_quantile_regression(training_data=leedata_cov[leedata_cov$treat==0 & leedata_cov$selection==1,],
-                                                           test_data=leedata_cov,
-                                                           variables_for_outcome=variables_for_outcome,
-                                                           quantile_grid_size=quantile_grid_size,
-                                                           myweights=weights[leedata_cov$treat==0 & leedata_cov$selection==1],...  )
-      y.hat.hurts=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantiles_10[inds_hurts,],p.0.hat=1/p.0.star[inds_hurts],
-                                          quantile_grid_size=quantile_grid_size,...)
-      y.hat$y.p0.hat[inds_hurts]<-y.hat.hurts$y.p0.hat
-      y.hat$y.1.p0.hat[inds_hurts]<-y.hat.hurts$y.1.p0.hat
-    }
-    else {
-      estimated_quantiles_10<-NULL
-    }
+    
+    estimated_quantiles_11<-estimate_quantile_regression(training_data=leedata_cov[leedata_cov$treat==1 & leedata_cov$selection==1,],
+                                                         test_data=leedata_cov,
+                                                         variables_for_outcome=variables_for_outcome,quantile_grid_size=quantile_grid_size,
+                                                         myweights=weights[leedata_cov$treat==1 & leedata_cov$selection==1],...  )
+    y.hat.helps=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantiles_11[inds_helps,],p.0.hat=p.0.star[inds_helps],
+                                        quantile_grid_size=quantile_grid_size,sort_quantiles=sort_quantiles,...)
+    y.hat$y.p0.hat[inds_helps]<-y.hat.helps$y.p0.hat
+    y.hat$y.1.p0.hat[inds_helps]<-y.hat.helps$y.1.p0.hat
+  } else {
+    estimated_quantiles_11<-NULL
+  }
+  
+  if (sum(inds_hurts)>0) {
+    estimated_quantiles_10<-estimate_quantile_regression(training_data=leedata_cov[leedata_cov$treat==0 & leedata_cov$selection==1,],
+                                                         test_data=leedata_cov,
+                                                         variables_for_outcome=variables_for_outcome,
+                                                         quantile_grid_size=quantile_grid_size,
+                                                         myweights=weights[leedata_cov$treat==0 & leedata_cov$selection==1],...  )
+    y.hat.hurts=evaluate_quantile_p_1_p(taus=taus,quantile_table=estimated_quantiles_10[inds_hurts,],p.0.hat=1/p.0.star[inds_hurts],
+                                        quantile_grid_size=quantile_grid_size,...)
+    y.hat$y.p0.hat[inds_hurts]<-y.hat.hurts$y.p0.hat
+    y.hat$y.1.p0.hat[inds_hurts]<-y.hat.hurts$y.1.p0.hat
+  }
+  else {
+    estimated_quantiles_10<-NULL
+  }
   
   return(list(inds_helps=inds_helps,
               y.hat=y.hat,
@@ -87,13 +87,21 @@ second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights=NULL,bound
   if (is.null(weights)) {
     weights<-rep(1,dim(leedata)[1])
   }
+  weights<-weights/sum(weights)
+  
   sample_size<-dim(leedata)[1]
   inds_hurts<-!inds_helps
   if (sum(inds_helps)>0){
+    prop0<-weighted.mean(leedata$treat[inds_helps]==0,weights[inds_helps])
+    prop1<-weighted.mean(leedata$treat[inds_helps]==1,weights[inds_helps])
+    prop10<-weighted.mean(leedata$treat[inds_helps]==0 & leedata$selection[inds_helps] == 1,weights[inds_helps])
+    prop11<-weighted.mean(leedata$treat[inds_helps]==1 & leedata$selection[inds_helps] == 1,weights[inds_helps])
+    props_list=list(prop0=prop0,prop1=prop1,prop10=prop10,prop11=prop11)
+    
     res_helps<-bounds_fun(leedata=leedata[ inds_helps,],
-                                   treat_helps = TRUE,
-                                   s.hat=s.hat[inds_helps,],
-                                   weights=weights[inds_helps],y.hat=y.hat[inds_helps,],...)
+                          treat_helps = TRUE,
+                          s.hat=s.hat[inds_helps,],
+                          weights=weights[inds_helps],y.hat=y.hat[inds_helps,],props_list=props_list,...)
     estimated_bounds_helps<-GetBounds(res_helps)
     
   }
@@ -104,10 +112,18 @@ second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights=NULL,bound
   
   
   if (sum(inds_hurts)>0){
+    
+    prop0<-weighted.mean(leedata$treat[inds_hurts]==0,weights[inds_hurts])
+    prop1<-weighted.mean(leedata$treat[inds_hurts]==1,weights[inds_hurts])
+    prop10<-weighted.mean(leedata$treat[inds_hurts]==0 & leedata$selection[inds_hurts] == 1,weights[inds_hurts])
+    prop11<-weighted.mean(leedata$treat[inds_hurts]==1 & leedata$selection[inds_hurts] == 1,weights[inds_hurts])
+    props_list=list(prop0=prop0,prop1=prop1,prop10=prop10,prop11=prop11)
+    
+    
     res_hurts<-bounds_fun (leedata=leedata[ inds_hurts,],
-                                   treat_helps = FALSE,
-                                   s.hat=s.hat[inds_hurts,],
-                                   y.hat=y.hat[inds_hurts,],weights=weights[inds_hurts],...)
+                           treat_helps = FALSE,
+                           s.hat=s.hat[inds_hurts,],
+                           y.hat=y.hat[inds_hurts,],weights=weights[inds_hurts],props_list=props_list,...)
     
     estimated_bounds_hurts<-GetBounds(res_hurts)
     
@@ -122,7 +138,7 @@ second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights=NULL,bound
   
   
   
-  bounds<-(sum(weights[inds_helps])*estimated_bounds_helps+sum(weights[inds_hurts])*estimated_bounds_hurts)/sample_size
+  bounds<-(sum(weights[inds_helps])*estimated_bounds_helps+sum(weights[inds_hurts])*estimated_bounds_hurts)
   return(list(lower_bound=bounds[1],
               upper_bound=bounds[2],
               bounds=bounds,
@@ -133,15 +149,19 @@ second_stage_wrapper<-function(leedata,inds_helps,y.hat,s.hat,weights=NULL,bound
 
 
 
-ortho_leebounds<-function(leedata_cov,s.hat=NULL,...) {
+ortho_leebounds<-function(leedata_cov,s.hat=NULL,s_min=0.001,...) {
   fs<-first_stage_wrapper(leedata_cov,s.hat=s.hat,...)
+  s.hat<-fs$s.hat
+  s.hat$s.0.hat<-sapply(s.hat$s.0.hat,max,s_min)
+  s.hat$s.1.hat<-sapply(s.hat$s.1.hat,max,s_min)
+  
   res<-second_stage_wrapper(leedata=leedata_cov,
-                            inds_helps=fs$inds_helps,y.hat=fs$y.hat,s.hat=fs$s.hat,...)
+                            inds_helps=fs$inds_helps,y.hat=fs$y.hat,s.hat=s.hat,...)
   res$inds_helps<-fs$inds_helps
   res$y.hat<-fs$y.hat
-  res$s.hat<-fs$s.hat
+  res$s.hat<-s.hat
   return (res)
-
+  
 }
 
 
@@ -166,7 +186,7 @@ summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y
     y.hat<-res$y.hat
   }
   
-
+  
   #weights<-weights/sum(weights)
   if (sum(is.na(weights))>0) {
     stop ("NA weights!")
