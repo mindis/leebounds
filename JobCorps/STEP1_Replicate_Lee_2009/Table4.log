@@ -1,0 +1,19 @@
+[1] "Control: Number of obs"
+[1] 3599
+[1] "Control: Prop non missing"
+[1] 0.5655031
+[1] "Control: Mean log wage"
+[1] 1.991009
+[1] "Treat: Number of obs"
+[1] 5546
+[1] "Treat: Prop non missing"
+[1] 0.6067872
+[1] "Treat: Mean log wage"
+[1] 2.02821
+[1] "Trimming threshold"
+[1] 0.932
+[1] "Results for week 45"
+[1] "Results for week 90"
+[1] "Results for week 135"
+[1] "Results for week 180"
+[1]  45  90 135 180

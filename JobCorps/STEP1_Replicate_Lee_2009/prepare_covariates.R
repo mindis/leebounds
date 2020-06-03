@@ -42,9 +42,10 @@ Lee_data[,factor_names]<-sapply(Lee_data[,factor_names],as.factor)
 Lee_data[,factor_names][is.na(Lee_data[,factor_names])]<-0
 Lee_data_factors_expanded<-model.matrix(~.,Lee_data[,factor_names])
 Lee_data_numeric<-Lee_data[,true_numeric_names]
-Lee_data_covariates<-cbind(Lee_data_factors_expanded,Lee_data_numeric)
+Lee_data_covariates<-cbind(MPRID=Lee_data$MPRID,Lee_data_factors_expanded,Lee_data_numeric)
 names(Lee_data_covariates)<-make.unique(names(Lee_data_covariates))
-selected_names<-setdiff(colnames(Lee_data_covariates),"(Intercept)")
+colnames(Lee_data_covariates)[1]<-"MPRID"
+selected_names<-setdiff(colnames(Lee_data_covariates),c("(Intercept)","X.Intercept."))
 # too large for GitHub
-#write_feather(Lee_data_covariates,paste0(my_path,"/JobCorps_data/dataLee2009covariates.feather"))
+#write_feather(Lee_data_covariates[,selected_names],paste0(my_path,"/JobCorps_data/dataLee2009covariates.feather"))
 ## 

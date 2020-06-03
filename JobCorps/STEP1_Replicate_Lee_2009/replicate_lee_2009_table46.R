@@ -5,7 +5,7 @@ my_path<-"/net/holyparkesec/data/tata/leebounds/"
 my_data<-read.csv(paste0(my_path,"/JobCorps_data/dataLee2009.csv"))
 my_data<-as.data.frame(my_data)
 
-source(paste0(my_path,"/R/leebounds.R"))
+source(paste0(my_path,"/JobCorps/STEP1_Replicate_Lee_2009/utils.R"))
 
 my_data_control<-filter(my_data,TREATMNT.y==0)
 my_data_treat<-filter(my_data,TREATMNT.y==1)
@@ -71,3 +71,8 @@ for (i in 1:length(selected_weeks)) {
   untrimmed_effect[i]<-  weighted.mean( logwage_week[my_data$TREATMNT.y==1 & leedata_week$selection==1],w=my_data$DSGN_WGT.y[my_data$TREATMNT.y==1 & leedata_week$selection==1])-
     weighted.mean( logwage_week[my_data$TREATMNT.y==0 & leedata_week$selection==1],w=my_data$DSGN_WGT.y[my_data$TREATMNT.y==0 & leedata_week$selection==1])
 }
+bounds<-apply(t(bounds),2,round,3)
+colnames(bounds)<-c("lower","upper")
+rownames(bounds)<-selected_weeks
+selected_weeks
+sink(file=NULL)
