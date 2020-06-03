@@ -8,11 +8,12 @@ source(paste0(my_path,"/R/auxiliary.R"))
 source(paste0(my_path,"/R/ortholeebounds.R"))
 source(paste0(my_path,"/R/leebounds.R"))
 source(paste0(my_path,"/R/utils.R"))
+source(paste0(my_path,"/R/orthogonal_correction.R"))
 source(paste0(my_path,"/ABBKK_2002/STEP2_Estimate_Bounds/aux.R"))
 ## load data
 mydata<-read.csv(paste0(my_path,"/ABBKK_2002/data/ABK_prepared_data.csv"))
 ## open log file
-sink(paste0(my_path,"/ABBKK_2002/STEP2_Estimate_Bounds/Table_ABBKK_2002.txt"),append=FALSE)
+sink(paste0(my_path,"/ABBKK_2002/STEP2_Estimate_Bounds/Table_ABBKK_2002_baseline.txt"),append=FALSE)
 
 
 ## clean data: take those wit age <=25 (age2<=23) and non-missing record of sex name
@@ -82,7 +83,7 @@ leedata_cov<-data.frame(treat=mydata$VOUCH0,selection=mydata$TEST_TAK, mydata[,e
 
 
 glm.fit<-glm(form=form_nonmonotone,
-                            data=leedata_cov[, setdiff(colnames(leedata_cov),"outcome")],
+             data=leedata_cov[, setdiff(colnames(leedata_cov),"outcome")],
              family="binomial")
 
 s.hat<-predict_selection(glm.fit,leedata_cov[,c("treat","selection",exogenous_covariates)])
@@ -126,18 +127,17 @@ for (subject in c("MATH","READING","WRITING")) {
   leebounds_ortho_result<-second_stage_wrapper(leedata=leedata_cov,
                                                inds_helps=first_stage$inds_helps,
                                                y.hat=first_stage$y.hat,
-                                               s.hat=s.hat,
-                                               weights=rep(1,dim(leedata_cov)[1]))
+                                               s.hat=s.hat,ortho=FALSE)
   
   orthoestimates[[subject]]<-GetBounds(leebounds_ortho_result)
   
-  
+
   
   estimated_orthobounds_bb<-weighted_bb(leedata_cov,
                                         B=N_rep,function_name=second_stage_wrapper,
                                         y.hat=first_stage$y.hat,
                                         inds_helps=first_stage$inds_helps,
-                                        s.hat=s.hat.logistic)
+                                        s.hat=s.hat.logistic,ortho=TRUE,c_quant=1)
   
   CR_ortho[[subject]]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb),ATE_est= orthoestimates[[subject]],ci_alpha=ci_alpha)
   
@@ -146,7 +146,7 @@ for (subject in c("MATH","READING","WRITING")) {
 ########################## COLUMN 5: ORTHOGONAL ESTIMATES WITH SIMPLE LOGISTIC REGRESSION (POWER 2)#####################
 
 form_nonmonotone<-as.formula(paste0("selection ~ (treat+AGE2  +MOM_SCH + MOM_AGE + DAD_SCH + 
-                             DAD_AGE) *(",paste0(exogenous_covariates,collapse="+"), ")" ))
+                                    DAD_AGE) *(",paste0(exogenous_covariates,collapse="+"), ")" ))
 
 leedata_cov<-data.frame(treat=mydata$VOUCH0,selection=mydata$TEST_TAK, mydata[,exogenous_covariates])
 
@@ -172,25 +172,24 @@ for (subject in c("MATH","READING","WRITING")) {
   
   # estimate quantile regression and assemble conditional quantile
   first_stage<-first_stage_wrapper(leedata_cov=leedata_cov,s.hat=s.hat.logistic,
-                                                            quantile_grid_size = quantile_grid_size,
-                                                            variables_for_outcome=exogenous_covariates)
-
-
+                                   quantile_grid_size = quantile_grid_size,
+                                   variables_for_outcome=exogenous_covariates)
+  
+  
   leebounds_ortho_result<-second_stage_wrapper(leedata=leedata_cov,
-                                                  inds_helps=first_stage$inds_helps,
-                                                  y.hat=first_stage$y.hat,
-                                                  s.hat=s.hat,
-                                                  weights=rep(1,dim(leedata_cov)[1]))
+                                               inds_helps=first_stage$inds_helps,
+                                               y.hat=first_stage$y.hat,
+                                               s.hat=s.hat,ortho=FALSE)
   
   orthoestimates2[[subject]]<-GetBounds(leebounds_ortho_result)
- 
 
+  
   
   estimated_orthobounds_bb<-weighted_bb(leedata_cov,
                                         B=N_rep,function_name=second_stage_wrapper,
                                         y.hat=first_stage$y.hat,
                                         inds_helps=first_stage$inds_helps,
-                                        s.hat=s.hat.logistic)
+                                        s.hat=s.hat.logistic,ortho=TRUE,c_quant=1)
   
   CR_ortho2[[subject]]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb),ATE_est= orthoestimates2[[subject]],ci_alpha=ci_alpha)
   
@@ -244,4 +243,4 @@ print("Width computation: Column 5")
 width_estimates_5
 width_CR_5
 
-save.image(paste0(my_path,"/ABBKK_2002/draft_older/ABBKK_2002.RData"))
+save.image(paste0(my_path,"/ABBKK_2002/draft_older/ABBKK_2002_baseline.RData"))

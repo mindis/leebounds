@@ -7,6 +7,7 @@ library(hdm)
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 source(paste0(my_path,"/R/ortholeebounds.R"))
 source(paste0(my_path,"/R/leebounds.R"))
+source(paste0(my_path,"/R/orthogonal_correction.R"))
 source(paste0(my_path,"/R/utils.R"))
 source(paste0(my_path,"/R/auxiliary.R"))
 source(paste0(my_path,"/ABBKK_2002/STEP2_Estimate_Bounds/aux.R"))
@@ -17,7 +18,7 @@ mydata<-mydata[mydata$AGE2<=23 & mydata$SEX_IS_NA == 0, ]
 dim(mydata)
 
 #Parameters
-sink(paste0(my_path,"/ABBKK_2002/STEP2_Estimate_Bounds/Table_ABBKK_2002.txt"),append=TRUE)
+#sink(paste0(my_path,"/ABBKK_2002/STEP2_Estimate_Bounds/Table_ABBKK_2002_baseline.txt"),append=TRUE)
 
 ## confidence level
 ci_alpha=0.05
@@ -50,12 +51,12 @@ exogenous_covariates<-c("AGE2","SEX_NAME","MOM_SCH" ,"MOM_AGE","DAD_SCH" ,"DAD_A
 print("Estimating test participation by post-lasso-logistic")
 ## preliminary  selection of geographical indicators
 form_nonmonotone<-as.formula(paste0("selection ~ (treat+AGE2  +MOM_SCH + MOM_AGE + DAD_SCH + 
-                             DAD_AGE) * (AGE2  +MOM_SCH + MOM_AGE + DAD_SCH + 
-                             DAD_AGE)*(",paste0(exogenous_covariates,collapse="+"),")"))
+                                    DAD_AGE) * (AGE2  +MOM_SCH + MOM_AGE + DAD_SCH + 
+                                    DAD_AGE)*(",paste0(exogenous_covariates,collapse="+"),")"))
 
 leedata_cov<-data.frame(treat=mydata$VOUCH0,selection=mydata$TEST_TAK, mydata[,exogenous_covariates])
 glm.fit<-rlassologit(form=form_nonmonotone,
-                            data=leedata_cov[,setdiff(colnames(leedata_cov),"outcome")])
+                     data=leedata_cov[,setdiff(colnames(leedata_cov),"outcome")])
 vars_for_selection<-setdiff(unique( unlist( strsplit (c(names(glm.fit$coefficients[glm.fit$coefficients!=0])
 ),split=":"))), c("(Intercept)", "treat" ) )
 
@@ -67,7 +68,7 @@ print(paste0("Selected geographic indiactors are",paste0(grep("STRATA|DAREA",var
 form_nonmonotone<-as.formula("selection ~ (treat+AGE2 + SEX_NAME +MOM_SCH + MOM_AGE + DAD_SCH + 
                              DAD_AGE) *(MOM_SCH + MOM_AGE + DAD_SCH + 
                              DAD_AGE+DAREA11 + DAREA17 + DAREA18+DAREA19 + STRATA2 + 
-                           +MOM_AGE_IS_NA+DAD_AGE_IS_NA)")
+                             +MOM_AGE_IS_NA+DAD_AGE_IS_NA)")
 glm.fit<-estimate_selection(form=form_nonmonotone,leedata=leedata_cov,
                             selection_function=rlassologit,
                             selection_function_name="rlassologit",
@@ -117,17 +118,16 @@ for (subject in c("MATH","READING","WRITING")) {
   leedata_cov<-cbind(leedata,mydata[,exogenous_covariates])
   
   first_stage<-first_stage_wrapper(leedata_cov=leedata_cov,
-                                              s.hat=s.hat.lasso,
-                                              quantile_grid_size = quantile_grid_size,
-                                               variables_for_outcome=vars_for_outcome)
+                                   s.hat=s.hat.lasso,
+                                   quantile_grid_size = quantile_grid_size,
+                                   variables_for_outcome=vars_for_outcome)
   first_stage_list[[subject]]<-first_stage
   
   leebounds_ortho_result<-second_stage_wrapper(leedata=leedata_cov,
                                                s.hat=s.hat.lasso,
                                                y.hat=first_stage$y.hat,
-                                               inds_helps=first_stage$inds_helps,
-                                               weights=rep(1,dim(leedata_cov)[1])
-                                               )
+                                               inds_helps=first_stage$inds_helps,ortho=TRUE,c_quant=1)
+  
   second_stage_list[[subject]]<-leebounds_ortho_result
   orthoestimates_postlasso[[subject]]<-GetBounds(leebounds_ortho_result)
   y.hat<-leebounds_ortho_result$y.hat
@@ -136,7 +136,7 @@ for (subject in c("MATH","READING","WRITING")) {
                                         B=N_rep,function_name=second_stage_wrapper,
                                         y.hat=first_stage$y.hat,
                                         inds_helps=first_stage$inds_helps,
-                                        s.hat=s.hat.lasso)
+                                        s.hat=s.hat.lasso,ortho=TRUE,c_quant=1)
   
   CR_ortho_postlasso[[subject]]<-compute_confidence_region(ATE_boot=t(estimated_orthobounds_bb),ATE_est= orthoestimates_postlasso[[subject]],ci_alpha=ci_alpha)
   ### subjects with positive lower bound
@@ -164,11 +164,11 @@ for (subject in c("MATH","READING","WRITING")) {
   
   
   estimates_bb_list[[subject]]<-weighted_bb(leedata_cov[,c("treat","outcome","selection",vars_for_plb)],
-                            form_selection = paste0("selection~(treat)*(",paste0(vars_for_plb,collapse="+"),")"),
-                            selection_function_name="glm",
-                            quantile_grid_size = quantile_grid_size,
-                            variables_for_outcome=vars_for_plb,
-                            form_outcome_plb=as.formula("outcome~."),function_name = summary_subjects_positive_lower_bound,B=N_rep)
+                                            form_selection = paste0("selection~(treat)*(",paste0(vars_for_plb,collapse="+"),")"),
+                                            selection_function_name="glm",
+                                            quantile_grid_size = quantile_grid_size,
+                                            variables_for_outcome=vars_for_plb,
+                                            form_outcome_plb=as.formula("outcome~."),function_name = summary_subjects_positive_lower_bound,B=N_rep)
   
   estimates_bb<- estimates_bb_list[[subject]]
   estimates_bb<-estimates_bb[, !is.na(apply(estimates_bb,2,sum))]
