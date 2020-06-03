@@ -26,7 +26,7 @@ Lee_data_all_covariates$EARN_YR_perc<-Lee_data_all_covariates$EARN_YR>3315 & Lee
 
 source(paste0(my_path,"/JobCorps/STEP2_Test_Monotonicity/utils_for_test.R"))
 source(paste0(my_path,"/JobCorps/STEP2_Test_Monotonicity/utils_for_bounds.R"))
-source(paste0(my_path,"/R/utils.R"))
+
 
 selected_weeks<-c(45,90,104,135,180,208)
 N_rep=1000
@@ -61,6 +61,21 @@ lm.fit<-lm(form=as.formula(paste0("outcome~",paste0(baseline_varnames,collapse="
 Lee_data$predicted_log_wage<-predict(lm.fit,leedata_cov)
 Lee_data$predicted_wage_group<-sapply(exp(Lee_data$predicted_log_wage),Lee_grouping)
 
+
+## week 208 predicted ML wage potential
+logwage_week<-as.numeric(as.matrix(log(Lee_data$EARNH208/Lee_data$HWH208)))
+logwage_week[is.na(logwage_week)]<-0
+logwage_week[logwage_week==-Inf]<-0
+leedata_cov<-cbind(treat=Lee_data$TREATMNT.y,selection=logwage_week>0,outcome = logwage_week, Lee_data_all_covariates)
+leedata_cov[is.na( leedata_cov)]<-0
+
+selected_names<-setdiff(colnames(Lee_data_all_covariates),"MPRID")
+glm.fit<-rlassologit(form=as.formula(paste0("selection~",paste0(selected_names,collapse="+"))) , 
+           data=leedata_cov)
+Lee_data$predicted_emp<-predict(glm.fit,leedata_cov,type="response")
+Lee_data$predicted_wage_group_ml<-sapply(Lee_data$predicted_emp,Lee_grouping,cutoffs=c(0.50,0.60,0.70,0.80))
+Lee_data$predicted_wage_group_ml[is.na(Lee_data$predicted_wage_group_ml)]<-4
+
 for (i in 1:length(selected_weeks)) {
   # prepare data
   week<-selected_weeks[i]
@@ -74,9 +89,10 @@ for (i in 1:length(selected_weeks)) {
   
   
   leedata_week<-Lee_data[,c("MPRID","TREATMNT.y","DSGN_WGT.y",earn_name,hwh_name)] %>%
-    inner_join (Lee_data[,c("MPRID","predicted_wage_group")],by= c("MPRID"="MPRID"))
+    inner_join (Lee_data[,c("MPRID","predicted_wage_group")],by= c("MPRID"="MPRID")) %>%
+    inner_join (Lee_data[,c("MPRID","predicted_wage_group_ml")],by= c("MPRID"="MPRID"))
   
-  colnames(leedata_week)<-c("MPRID","treat","weights",earn_name,hwh_name,"predicted_wage_group")
+  colnames(leedata_week)<-c("MPRID","treat","weights",earn_name,hwh_name,"predicted_wage_group","predicted_wage_group_ml")
   leedata_week$selection<-leedata_week[,earn_name]>0
   leedata_week$outcome<-as.numeric(as.matrix(log(leedata_week[,earn_name]/leedata_week[,hwh_name])))
   ### COLUMN 1
@@ -87,21 +103,25 @@ for (i in 1:length(selected_weeks)) {
   ##  bootstrap draws of bounds
   print ("Computing  Lee (2009) confidence region by regular bootstrap (column 1) ...")
   
-   bounds_bb<-main_bb(function_name=leebounds_unknown_sign,mydata=leedata_week,N_rep=N_rep)
+ # bounds_bb<-main_bb(function_name=leebounds_unknown_sign,mydata=leedata_week,N_rep=N_rep)
   # ## confidence region for identified set
-    CR[,i]<-compute_confidence_region(bounds_bb,estimates[,i], ci_alpha=ci_alpha )
-   IM_CR[,i]<-imbens_manski(bounds_bb,estimates[,i], ci_alpha=ci_alpha)
+  #CR[,i]<-compute_confidence_region(bounds_bb,estimates[,i], ci_alpha=ci_alpha )
+  #IM_CR[,i]<-imbens_manski(bounds_bb,estimates[,i], ci_alpha=ci_alpha)
   
   ### Column 2 
   print ("Computing  Lee (2009) estimates (column 2) ...")
   res<-Lee_sharp_bounds(leedata_week,group_name="predicted_wage_group",treat_helps = (week>=90))
   estimates_sharp[,i]<-GetBounds(res)
   
-  bounds_bb<-main_bb(function_name=Lee_sharp_bounds,mydata=leedata_week,N_rep=N_rep,group_name="predicted_wage_group",treat_helps = (week>=90))
+  res2<-Lee_sharp_bounds(leedata_week,group_name="predicted_wage_group_ml",treat_helps = (week>=90))
+  estimates_sharp2[,i]<-GetBounds(res2)
+  
+  
+ # bounds_bb<-main_bb(function_name=Lee_sharp_bounds,mydata=leedata_week,N_rep=N_rep,group_name="predicted_wage_group",treat_helps = (week>=90))
   ## confidence region for identified set
-   CR_sharp[,i]<-compute_confidence_region(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha )
-   IM_CR_sharp[,i]<-imbens_manski(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha)
- 
+#  CR_sharp[,i]<-compute_confidence_region(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha )
+ # IM_CR_sharp[,i]<-imbens_manski(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha)
+  
 }
 
 estimates_table<-rbind(estimates,estimates_sharp)
