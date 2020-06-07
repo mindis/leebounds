@@ -61,7 +61,7 @@ prepared_data_sample_12m<-prepared_data_sample_12m[,c("treatment",stratification
                                                       all_names,"person_id")]
 
 weight_name<-"weight_12m"
-B<-400
+B<-1000
 ############# Estimate bounds ############
 
 ### trimming value is zero for utilization or health outcomes
@@ -111,5 +111,5 @@ write.csv(basic_trim_sd,paste0(my_path,"/OHIE/STEP2_Standard_Trim/csv/sd_basic_t
 
 
 
-save.image(paste0(my_path,"/OHIE/STEP2_Standard_Trim/draft/std_trim_boot.RData"))
+#save.image(paste0(my_path,"/OHIE/STEP2_Standard_Trim/draft/std_trim_boot.RData"))
 
