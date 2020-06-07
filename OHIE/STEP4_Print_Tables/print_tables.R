@@ -66,7 +66,3 @@ write.table(table,paste0(my_path,"/OHIE/STEP4_Print_Tables/health.txt"),append=T
 table<-print(xtable(print_table(rownames(table_notrim)[20:23],digs=3)),type="latex",include.rownames =FALSE )
 write.table("Panel_A_Binary_Outcomes",paste0(my_path,"/OHIE/STEP4_Print_Tables/financial.txt"))
 write.table(table,paste0(my_path,"/OHIE/STEP4_Print_Tables/financial.txt"),append=TRUE)
-
-table<-print(xtable(print_table(rownames(table_notrim)[5:12],digs=3)),type="latex",include.rownames =FALSE )
-write.table("Panel_B_Continuous_Outcomes",paste0(my_path,"/OHIE/STEP4_Print_Tables/financial.txt"),append=TRUE)
-write.table(table,paste0(my_path,"/OHIE/STEP4_Print_Tables/financial.txt"),append=TRUE)
