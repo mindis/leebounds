@@ -123,8 +123,8 @@ for (outcome_name in c(utilization_outcomes)) {
                                                              sort_quantiles=TRUE,
                                                              selected_inds=NULL,
                                                              max_p0_hat=1.001001,
-                                                             point_mass_cutoff=0.15,
-                                                             point_mass=TRUE,
+                                                             point_mass_cutoff=0,
+                                                             point_mass=FALSE,
                                                              trimming_value=0)
   n_trimmed[[outcome_name]]<-dim(trimmed_data[[outcome_name]])[1]
   result[[outcome_name]]<-second_stage_wrapper(data=trimmed_data[[outcome_name]],
@@ -138,23 +138,23 @@ for (outcome_name in c(numeric_health_outcomes)) {
                                                                           list_of_all_controls=list_of_all_controls,
                                                                           selection_function_for_threshold=glm,
                                                                           selection_function_for_threshold_name="glm",
-                                                                          stratification_controls= stratification_controls[c(1:7,9,11)],
+                                                                          stratification_controls= stratification_controls,
                                                                           selection_function_point_mass=rlassologit,
                                                                           selection_function_point_mass_name="rlassologit",
                                                                           formula_threshold=formula_threshold_list[["numeric_health"]],
                                                                           formula_point_mass=formula_point_mass_list[["numeric_health"]],
                                                                           myweights=prepared_data_sample_12m$weight_12m,
-                                                                          variables_for_outcome=stratification_controls[c(1:7,9,11)],
+                                                                          variables_for_outcome=stratification_controls,
                                                                           quantile_grid_size=0.01,
                                                                           sort_quantiles=TRUE,
                                                                           selected_inds=NULL,
                                                                           max_p0_hat=1.001001,
-                                                                          point_mass_cutoff=0.12,
+                                                                          point_mass_cutoff=0.18,
                                                                point_mass=TRUE, trimming_value=0)
   print(dim( trimmed_data[[outcome_name]]))
   result[[outcome_name]]<-second_stage_wrapper(data=trimmed_data[[outcome_name]],
                                                weight_name=weight_name,
-                                               stratification_controls=stratification_controls[c(1:7,9,11)])
+                                               stratification_controls=stratification_controls)
 }
 
 for (outcome_name in discrete_outcome_names) {
@@ -166,13 +166,13 @@ for (outcome_name in discrete_outcome_names) {
                                                              trimming_value=trimming_value_list[match(outcome_name,discrete_outcome_names)],
                                                              selection_function_for_threshold=rlassologit,
                                                              selection_function_for_threshold_name="rlassologit",
-                                                             stratification_controls= stratification_controls[c(1:7,9,11)],
+                                                             stratification_controls= stratification_controls,
                                                              selection_function_point_mass=rlassologit,
                                                              selection_function_point_mass_name="rlassologit",
                                                              formula_threshold=formula_threshold_list[["discrete"]],
                                                              formula_point_mass=formula_point_mass_list[["discrete"]],
                                                              myweights=prepared_data_sample_12m$weight_12m,
-                                                             point_mass_cutoff=0.15,
+                                                             point_mass_cutoff=0.10,
                                                              max_p0_hat=1.000001 )
   
   
@@ -197,4 +197,4 @@ write.csv(trim_ml,paste0(my_path,"/OHIE/STEP3_ML/csv/estimates_ml_trim.csv"))
 #write.csv(basic_trim_sd,paste0(my_path,"/OHIE/STEP3_ML/csv/sd_ml_trim.csv"))
 
 
-#save.image(paste0(my_path,"/OHIE/STEP3_ML/draft/estimates.RData"))
+save.image(paste0(my_path,"/OHIE/STEP3_ML/draft/estimates.RData"))
