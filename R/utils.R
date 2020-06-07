@@ -4,13 +4,14 @@ main_bb<-function(mydata,N_rep=10,function_name,...) {
   sample_size<-dim(mydata)[1]
   for (b in 1:N_rep) {
     set.seed(b)
+    print(b)
     inds<-sample(1:sample_size,sample_size,replace=TRUE)
     mydatab<-mydata[inds,]
     resultb = try(function_name  (mydatab,...)) 
-    ATE_bb[b,]<-GetBounds(resultb)
+    ATE_bb[b,]<-c(resultb$lower_bound, resultb$upper_bound)
     
   }
-  return(ATE_bb)
+  return( ATE_bb)
 }
 
 
@@ -118,4 +119,34 @@ imbens_manski<-function(ATE_boot, ATE_est, ci_alpha=0.05) {
   
   return(c(lower_bound=lower_bound,upper_bound=upper_bound))
   
+}
+
+print_table<-function(estimates,sd,im=NULL,digs=3) {
+ 
+  estimates<-apply(estimates,2,round,digs)
+  sd<-apply(sd,2,round,digs)
+  if (! is.null(im)) {
+    im<-apply(im,2,round,digs)
+    M<-matrix(NA,dim(estimates)[1]*3,dim(estimates)[2]/2)
+    for (j in 1:dim(estimates)[1]) {
+      for (k in 1:(dim(estimates)[2]/2)) {
+        print(k)
+        M[3*j-2,k]<-paste0("[", estimates[j,2*k-1],", " ,estimates[j,2*k],"]")
+        M[3*j-1,k]<-paste0("(", sd[j,2*k-1],", " ,sd[j,2*k],")")
+        M[3*j,k]<-paste0("(", im[j,2*k-1],", " ,im[j,2*k],")")
+      }
+    }
+  } else {
+    M<-matrix(NA,dim(estimates)[1]*2,dim(estimates)[2]/2)
+    for (j in 1:dim(estimates)[1]) {
+      for (k in 1:(dim(estimates)[2]/2)) {
+        print(k)
+        M[2*j-1,k]<-paste0("[", estimates[j,2*k-1],", " ,estimates[j,2*k],"]")
+        M[2*j,k]<-paste0("(", sd[j,2*k-1],", " ,sd[j,2*k],")")
+      }
+    }
+  }
+ 
+  
+  return(M)
 }

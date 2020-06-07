@@ -140,7 +140,7 @@ orthogonal_correction<-function(leedata,treat_helps,props_list,y.hat,s.hat,c_qua
   if (treat_helps) {
     
     p.0.hat<-s.0.hat/s.1.hat
-    p.0.hat<-sapply(p.0.hat,min,0.9999)
+    p.0.hat<-sapply(p.0.hat,min,0.99999)
     # (-1)* (-1) *(1)
     gamma1x<-y.1.p0.hat*prop0/prop10
     # (-1)* (-1) *(-1)
@@ -177,7 +177,7 @@ orthogonal_correction<-function(leedata,treat_helps,props_list,y.hat,s.hat,c_qua
   } else {
     
     p.0.hat<-s.1.hat/s.0.hat
-    p.0.hat<-sapply(p.0.hat,min,0.9999)
+    p.0.hat<-sapply(p.0.hat,min,0.99999)
     
     
     # (-1)*(-1)*(-1)

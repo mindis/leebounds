@@ -204,6 +204,13 @@ summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y
   inds_helps<-p.0.star<=1
   inds_hurts<-p.0.star>1
   
+  if (mean(inds_helps)<1-max_p_hat) {
+    p.0.star<-sapply(p.0.star,max,1.010101)
+  }
+  
+  inds_helps<-p.0.star<=1
+  inds_hurts<-p.0.star>1
+  
   if (sum(inds_helps)>0){
     leedata_cov<-leedata_cov_total[inds_helps,]
     weights<-weights_total[inds_helps]
@@ -211,27 +218,28 @@ summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y
     d<-leedata_cov$treat
     s<-leedata_cov$selection
     sy<-leedata_cov$outcome
+    leedata_cov$weights<-weights
+    leedata_cov$y.p0.hat<-y.hat$y.p0.hat[inds_helps]
+    leedata_cov$y.1.p0.hat<-y.hat$y.1.p0.hat[inds_helps]
     
     prop0<-stats::weighted.mean(s[d==0]==1,w=weights[d==0])
     
-    y.p0.hat<-y.hat$y.p0.hat[inds_helps]
-    y.1.p0.hat<-y.hat$y.1.p0.hat[inds_helps]
     
-    lm0.fit<-lm(formula=form_outcome,data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
-                subset=(s==1 & d==0),
+    lm0.fit<-lm(formula=form_outcome,data=leedata_cov,
+                subset=(selection==1 & treat==0),
                 weights = weights)
-    y0.hat<-predict(lm0.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("selection","outcome"))])
+    y0.hat<-predict(lm0.fit,leedata_cov)
     lm1.fit<-lm(formula=form_outcome,
-                leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
-                subset=s==1  & d==1 & sy<=y.p0.hat,
+                leedata_cov,
+                subset=selection==1  & treat==1 & outcome<=y.p0.hat,
                 weights=weights)
-    y1.hat<-predict( lm1.fit, leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))])
+    y1.hat<-predict( lm1.fit, leedata_cov)
     treat_effect_lower_bound<-y1.hat-y0.hat
     
-    lm.up.fit<-lm(formula=form_outcome,data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
-                  subset=s==1  & d==1 & sy>=y.1.p0.hat,
+    lm.up.fit<-lm(formula=form_outcome,data=leedata_cov,
+                  subset=selection==1  & treat==1 & outcome>=y.1.p0.hat,
                   weights=weights)
-    y1.hat.up<-predict(lm.up.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))])
+    y1.hat.up<-predict(lm.up.fit,leedata_cov)
     
     
     is_positive<-treat_effect_lower_bound>0
@@ -258,37 +266,39 @@ summary_subjects_positive_lower_bound<-function(leedata_cov_total,weights=NULL,y
     
     
     leedata_cov<-leedata_cov_total[inds_hurts,]
-    y.p0.hat<-y.hat$y.p0.hat[inds_hurts]
-    y.1.p0.hat<-y.hat$y.1.p0.hat[inds_hurts]
     weights<-weights_total[inds_hurts]
-    
+    leedata_cov$weights<-weights
     d<-leedata_cov$treat
     s<-leedata_cov$selection
     sy<-leedata_cov$outcome
+    
+    leedata_cov$y.p0.hat<-y.hat$y.p0.hat[inds_hurts]
+    leedata_cov$y.1.p0.hat<-y.hat$y.1.p0.hat[inds_hurts]
+    leedata_cov$weights<-weights
     
     prop1<-stats::weighted.mean(s[d==1]==1,w=weights[d==1])
     
     
     lm1.fit<-lm(formula=form_outcome,
-                data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
-                subset=s==1 & d==1,
+                data=leedata_cov,
+                subset= selection==1 & treat==1,
                 weights=weights)
-    y1.hat<-predict(lm1.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("selection","outcome"))])
+    y1.hat<-predict(lm1.fit,leedata_cov)
     
     lm0.fit<-lm(formula=form_outcome,
-                data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
-                subset=s==1  & d==0 & sy>=y.1.p0.hat,
+                data=leedata_cov,
+                subset=selection==1  & treat==0 & outcome>=y.1.p0.hat,
                 weights=weights)
-    y0.hat<-predict( lm0.fit, leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))])
+    y0.hat<-predict( lm0.fit, leedata_cov)
     treat_effect_lower_bound<-y1.hat-y0.hat
     is_positive<-treat_effect_lower_bound>0
     
     
     lm.low.fit<-lm(formula=form_outcome,
-                   data=leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))],
-                   subset=s==1  & d==0 & sy<=y.p0.hat,
+                   data=leedata_cov,
+                   subset= selection==1  & treat==0 & outcome<=y.p0.hat,
                    weights=weights)
-    y0.hat.low<-predict(lm.low.fit,leedata_cov[,setdiff(colnames(leedata_cov),c("selection","treat"))])
+    y0.hat.low<-predict(lm.low.fit,leedata_cov)
     treat_effect_upper_bound<-y1.hat-y0.hat.low
     
     
