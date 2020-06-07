@@ -4,6 +4,7 @@ rm(list=ls())
 library(foreign)
 library(tidyverse)
 
+## add your path here 
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 prepared_data<-read.dta(paste0(my_path,"/OHIE/OHIE_Data/data_for_analysis_ver12.dta"))
 ed_vars<-read.dta(paste0(my_path,"/OHIE/OHIE_Data/oregonhie_ed_vars.dta"))
@@ -83,17 +84,22 @@ prepared_data$zip_msa[prepared_data$zip_msa=="Zip code of residence NOT in a MSA
 
 
 prepared_data$age<-2008-prepared_data$birthyear_list
-
-
-
-
 prepared_data[,binary_outcome_names]<-sapply(prepared_data[,binary_outcome_names],as.character)
 prepared_data[,binary_outcome_names]<-sapply(prepared_data[,binary_outcome_names],replace_yes_no)
 prepared_data[,all_names]<-sapply(prepared_data[,all_names],as.numeric)
 
 
+### create distinct groups based on compulsory covariates
+list_of_basic_qje_controls<-grep("ddd",colnames(prepared_data),value=TRUE)
+## group identifier
+set.seed(1)
+groupid<-runif(length(list_of_basic_qje_controls))
+mygroup<-as.matrix(prepared_data[,list_of_basic_qje_controls])%*%groupid
+unique_groups<-as.numeric(unique(mygroup))
+prepared_data$group_id<-match(mygroup,unique_groups)
 
-write.csv(prepared_data[,c("person_id","household_id","treatment", "ohp_all_ever_survey","female_list","english_list","zip_msa",
+
+write.csv(prepared_data[,c("person_id","household_id","treatment", "ohp_all_ever_survey","female_list","english_list","zip_msa","group_id",
                                ed_pre_covs,state_pre_covs,
                                grep("ddd",colnames(prepared_data),value=TRUE),
                                "weight_12m","sample_12m","sample_12m_resp",
@@ -102,7 +108,7 @@ write.csv(prepared_data[,c("person_id","household_id","treatment", "ohp_all_ever
                                cost_outcomes,numeric_health_outcomes
 )],paste0(my_path,"/OHIE/OHIE_Data/prepared_data.csv"))
 
-write_feather(prepared_data[,c("person_id","household_id","treatment", "ohp_all_ever_survey","female_list","english_list","zip_msa",
+write_feather(prepared_data[,c("person_id","household_id","treatment", "ohp_all_ever_survey","female_list","english_list","zip_msa","group_id",
                                ed_pre_covs,state_pre_covs,
                                grep("ddd",colnames(prepared_data),value=TRUE),
                                "weight_12m","sample_12m","sample_12m_resp",
