@@ -42,12 +42,6 @@ estimates_sharp<-matrix(0,2,length(selected_weeks))
 CR_sharp<-matrix(0,2,length(selected_weeks))
 IM_CR_sharp<-matrix(0,2,length(selected_weeks))
 
-# Column 3
-estimates_sharp2<-matrix(0,2,length(selected_weeks))
-CR_sharp2<-matrix(0,2,length(selected_weeks))
-IM_CR_sharp2<-matrix(0,2,length(selected_weeks))
-
-
 ## week 208 predicted wage potential
 
 logwage_week<-as.numeric(as.matrix(log(Lee_data$EARNH208/Lee_data$HWH208)))
@@ -97,7 +91,7 @@ for (i in 1:length(selected_weeks)) {
   res<-Lee_sharp_bounds(leedata_week,group_name="predicted_wage_group",treat_helps = (week>=90))
   estimates_sharp[,i]<-GetBounds(res)
   
-  bounds_bb<-main_bb(function_name=Lee_sharp_bounds,mydata=leedata_week,N_rep=N_rep,group_name="predicted_wage_group",treat_helps = (week>=90))
+  #bounds_bb<-main_bb(function_name=Lee_sharp_bounds,mydata=leedata_week,N_rep=N_rep,group_name="predicted_wage_group",treat_helps = (week>=90))
   ## confidence region for identified set
    CR_sharp[,i]<-compute_confidence_region(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha )
    IM_CR_sharp[,i]<-imbens_manski(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha)

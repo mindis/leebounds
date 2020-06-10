@@ -27,7 +27,7 @@ Lee_data_all_covariates<-cbind(Lee_data_all_covariates,Lee_data[,baseline_varnam
 Lee_data_all_covariates[is.na(Lee_data_all_covariates)]<-0
 Lee_data_all_covariates$EARN_YR_quant<-Lee_data_all_covariates$EARN_YR>720 & Lee_data_all_covariates$EARN_YR<3315
 Lee_data_all_covariates$EARN_YR_perc<-Lee_data_all_covariates$EARN_YR>3315 & Lee_data_all_covariates$EARN_YR<7298
-source(paste0(my_path,"/JobCorps/STEP3_MISC/utils_for_test.R"))
+source(paste0(my_path,"/JobCorps/STEP2_Test_Monotonicity/utils_for_test.R"))
 
 
 
@@ -131,6 +131,9 @@ myres_M3=foreach(week=140:153, .combine = 'cbind',.packages = c("tidyverse"))  %
   
 }
 
+
+
+
 myres_M5=foreach(week=165:180, .combine = 'cbind',.packages = c("tidyverse"))  %dopar% {
   ## constructed data for week
   cov_names<-c("FRQ_POT3","BLACK")
@@ -175,6 +178,7 @@ test_result$pvalue[60:79]<-as.numeric(myres_M0)
 test_result$pvalue[80:108]<-as.numeric(myres_M1)
 test_result$pvalue[109:139]<-as.numeric(myres_M2)
 test_result$pvalue[140:153]<-as.numeric(myres_M3)
+test_result$pvalue[154:164]<-as.numeric(myres_M4)
 test_result$pvalue[165:180]<-as.numeric(myres_M5)
 test_result$pvalue[181:208]<-as.numeric(myres_M6)
 

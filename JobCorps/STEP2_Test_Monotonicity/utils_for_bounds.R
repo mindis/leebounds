@@ -22,7 +22,7 @@ Lee_sharp_bounds<-function(leedata,group_name,treat_helps) {
   bounds_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds_unknown_sign,treat_helps=treat_helps,keep=TRUE),GetTrimmedBounds)),ncol=2,byrow=TRUE)
   p0s_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds_unknown_sign,treat_helps=treat_helps,keep=TRUE),GetThresh)),ncol=1,byrow=TRUE)
   odds_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds_unknown_sign,treat_helps=treat_helps,keep=TRUE),GetOdds)),ncol=1,byrow=TRUE)
-  
+  print(p0s_by_group)
   if (treat_helps==TRUE)  {
     pmf<-table(leedata$group[leedata$selection==1 & leedata$treat ==0])/sum(table(leedata$group[leedata$selection==1 & leedata$treat ==0]))
     #print(sum(pmf)==1)
