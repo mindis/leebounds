@@ -17,6 +17,19 @@ Required R libraries are: ```tidyverse``` and ```sas7bdat```
 -- takes ```baseline.sas7bdat``` and ```dataLee2009.csv``` (see previous step)
 
 -- identifies all categorical variables and recodes them as binary indicators. Output is not loaded at GitHub due to memory constraint.
+### Step 2: Test monotonicity
+```
+Rscript evidence_against_monotonicity.R
+```
+computes estimates for Figure 1,2
+```
+Rscript test_monotonicity.R 
+```
+computed p-value for the shaded weeks in Figure 2
+```
+Rscript replicate_lee.R 
+```
+computes Table 1 bounds
 
 ### Step 2: Estimate bounds for Table JobCorps 
 
@@ -32,13 +45,9 @@ replicates Columns 1,2,3,4 from Table JobCorps
 replicates Columns 5,6 from Table JobCorps. Output log is Table_JobCorps.txt. 
 Required R libraries are: ```hdm``` and ```expm```
 
-### Step 3. Miscellaneous
+### Step 3. Miscellaneous  
 ```
-Rscript evidence_against_monotonicity.R
-```
-computes estimates for Figure 1,2  
-```
-Rscript estimate_bounds_nontreated_wage_plb.R
+Rscript estimate_bounds_nontreated_wage.R
 ```
 computes estimates for Figure 3,5
 ### Step 4. Print Figures
