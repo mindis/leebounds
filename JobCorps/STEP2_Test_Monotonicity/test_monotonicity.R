@@ -133,6 +133,32 @@ myres_M3=foreach(week=140:153, .combine = 'cbind',.packages = c("tidyverse"))  %
 
 
 
+myres_M4=foreach(week=154:164, .combine = 'cbind',.packages = c("tidyverse"))  %dopar% {
+  cov_names<-c("REASED_R4","IMP_PRO1")
+  
+  
+  group_weight<-1:length(cov_names)
+  mygroup<-as.matrix(Lee_data_all_covariates[,cov_names])%*%group_weight
+  mygroup<-as.numeric(mygroup)
+  
+  
+  mygroup<-group_by(data.frame(group=mygroup),group) %>%
+    count %>%
+    inner_join(data.frame(group=mygroup,MPRID=Lee_data$MPRID))
+  ## unite groups of size less than 30 into 1 group
+  mygroup$group[mygroup$n<=20]<-1
+  mygroup<-ungroup(mygroup)
+  
+  mygroup$group[mygroup$group %in% c(0,2)]<-0
+  if (week <=156) {
+    mygroup$group[mygroup$group %in% c(1,3)]<-1
+  }
+
+  pvalue<-test_wrapper(week,mygroup)
+  
+}
+
+
 
 myres_M5=foreach(week=165:180, .combine = 'cbind',.packages = c("tidyverse"))  %dopar% {
   ## constructed data for week

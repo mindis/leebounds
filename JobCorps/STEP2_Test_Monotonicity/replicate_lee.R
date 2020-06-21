@@ -91,7 +91,7 @@ for (i in 1:length(selected_weeks)) {
   res<-Lee_sharp_bounds(leedata_week,group_name="predicted_wage_group",treat_helps = (week>=90))
   estimates_sharp[,i]<-GetBounds(res)
   
-  #bounds_bb<-main_bb(function_name=Lee_sharp_bounds,mydata=leedata_week,N_rep=N_rep,group_name="predicted_wage_group",treat_helps = (week>=90))
+  bounds_bb<-main_bb(function_name=Lee_sharp_bounds,mydata=leedata_week,N_rep=N_rep,group_name="predicted_wage_group",treat_helps = (week>=90))
   ## confidence region for identified set
    CR_sharp[,i]<-compute_confidence_region(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha )
    IM_CR_sharp[,i]<-imbens_manski(bounds_bb,estimates_sharp[,i], ci_alpha=ci_alpha)
@@ -115,6 +115,6 @@ IM_CR_table<-apply(IM_CR_table,2,round,3)
 print("Saving estimates in STEP2_Estimate_Bounds/csv/ ...")
 sink(file=NULL)
 closeAllConnections()
-write.csv(estimates_table,paste0(my_path,"JobCorps/STEP2_Test_Monotonicity/csv/Lee_replicated_estimates.csv"))
-write.csv(CR_table,paste0(my_path,"JobCorps/STEP2_Test_Monotonicity/csv/Lee_replicated_CR.csv"))
-write.csv(IM_CR_table,paste0(my_path,"JobCorps/STEP2_Test_Monotonicity/csv/Lee_replicated_CR_IM.csv"))
+write.csv(estimates_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Lee_replicated_estimates.csv"))
+write.csv(CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Lee_replicated_CR.csv"))
+write.csv(IM_CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Lee_replicated_CR_IM.csv"))
