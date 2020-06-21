@@ -10,7 +10,7 @@ library(hdm)
 
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 ### load data
-sink(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/Table1_Col4_lasso.log"))
+#sink(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/Table1_Col123.log"))
 print ("Loading data ...")
 Lee_data_covariates<-read.csv(paste0(my_path,"/JobCorps_data/dataLee2009.csv"))
 Lee_data_all_covariates<-read_feather(paste0(my_path,"/JobCorps_data/dataLee2009covariates3.feather"))
@@ -24,7 +24,7 @@ source(paste0(my_path,"/R/auxiliary.R"))
 source(paste0(my_path,"/R/orthogonal_correction.R"))
 source(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/utils.R"))
 selected_weeks<-c(45,90,104,135,180,208)
-N_rep=800
+N_rep=300
 ci_alpha=0.05
 quantile_grid_size=0.01
 
@@ -32,6 +32,8 @@ orthoestimates_postlasso<-matrix(0,2,length(selected_weeks))
 CR_ortho<-matrix(0,2,length(selected_weeks))
 IM_ortho<-matrix(0,2,length(selected_weeks))
 
+estimates_plb<-matrix(0,2,length(selected_weeks))
+frac_positive<-rep(0,length(selected_weeks))
 #### Estimate selection equation
 baseline_varnames<-c("FEMALE","AGE","BLACK","HISP","OTHERRAC",
                      "MARRIED","TOGETHER","SEPARATED","HASCHLD","NCHLD","HGC","HGC_MOTH","HGC_FATH","EVARRST",
@@ -60,7 +62,11 @@ selected_covs_selection[[4]]<-c("treat:EARN_YR","treat:R_HOME1","treat:AGE","tre
 selected_covs_selection[[5]]<-c(baseline_varnames,paste0("treat:",baseline_varnames),"treat:EARN_CMP")
 selected_covs_selection[[6]]<-unique(c(baseline_varnames,"treat:EARN_YR","treat:EARN_CMP"  ))
 selected_covs_outcome<-list()
-for (i in 1:6) {
+
+frac_plb<-rep(0,6)
+orthoestimates_plb<-matrix(0,2,6)
+CR_ortho_plb<-matrix(0,2,6)
+for (i in 2:6) {
   # prepare data
   week<-selected_weeks[i]
   print (paste0("Results for week ", week))
@@ -111,19 +117,11 @@ for (i in 1:6) {
   
   selected_covs_outcome[[i]]<-setdiff(names(lm.fit$coefficients)[lm.fit$coefficients!=0],c("(Intercept)"))
   # estimates_nonmonotone[,i]<-GetBounds(leebounds_wout_monotonicity(leedata_cov,p.0.star))
-  if (i==3) {
-    selected_covs_outcome[[i]]<-c("PAY_RENT1", "HH_INC5" ,  "PERS_INC1", "HRWAGER"  , "WKEARNR" ,  "FEMALE" ,
-                                  "RACE_ETH2", "NTV_LANG3",  "IMP_PAR1" , "EARN_YR" ,  "MONINED" ,  "NUMBJOBS"
-    )
-  }
   if (i==4) {
     selected_covs_outcome[[i]]<-c(selected_covs_outcome[[i]], "BLACK")
   }
   if (i==5) {
     selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], baseline_varnames))
-  }
-  if (i==6) {
-    selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], "BLACK","AGE"))
   }
   leebounds_ortho_result<-ortho_leebounds(leedata_cov=leedata_cov,s.hat= s.hat,
                                           quantile_grid_size = quantile_grid_size,
@@ -131,40 +129,54 @@ for (i in 1:6) {
                                           max_wage=max_wage,distribution_functionname="rq",
                                           sort_quantiles= TRUE,ortho=TRUE,c_quant=0,weight=Lee_data$DSGN_WGT.y) 
   
+
+  if (i==2) {
+    selected_vars<-c("FEMALE","EARN_YR","EARN_CMP","WKEARNR","R_HOME1","NUMBJOBS","MONINED"
+    )
+  }
+  if (i==3) {
+    selected_covs_outcome[[i]]<-unique( selected_covs_outcome[[i]],c("PAY_RENT1", "HH_INC5" ,  "PERS_INC1", "HRWAGER"  , "WKEARNR" ,  "FEMALE" ))
+  }
   
-  orthoestimates_postlasso[,i]<-GetBounds(leebounds_ortho_result)
+  if (i==4) {
+    selected_vars<-baseline_varnames
+    
+   
+  }
+  if (i == 5) {
+    selected_vars<-unique(c("FEMALE","EARN_YR","EARN_CMP","WKEARNR","R_HOME1","NUMBJOBS","MONINED","BLACK"))
+    
+  }
+     
+  if (i == 6) {
+    selected_vars<-c("FEMALE","EARN_YR","EARN_CMP","WKEARNR","NUMBJOBS","MONINED")
+    
+  }  
+
+    is_positive<-summary_subjects_positive_lower_bound2(leedata_cov_total=leedata_cov,
+                                             s.hat=   leebounds_ortho_result$s.hat,y.hat=  leebounds_ortho_result$y.hat,
+                                             weight=Lee_data$DSGN_WGT.y,myfun=lm,form_outcome=as.formula(paste0("outcome~",paste0(selected_vars,collapse="+")) ))
   
-  
-  estimated_orthobounds_bb<-main_bb(leedata_cov,N_rep=N_rep,function_name=second_stage_wrapper,
-                                    y.hat= leebounds_ortho_result$y.hat,s.hat=leebounds_ortho_result$s.hat,
-                                    inds_helps=leebounds_ortho_result$inds_helps,weight=Lee_data$DSGN_WGT.y)
-  CR_ortho[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb,ATE_est=    orthoestimates_postlasso[,i],ci_alpha=ci_alpha)
-  IM_ortho[,i]<-imbens_manski(estimated_orthobounds_bb,orthoestimates_postlasso[,i], ci_alpha=ci_alpha)
-  
+    frac_plb[i]<-mean(is_positive)
+ leebounds_ortho_result2<-second_stage_wrapper(leedata=leedata_cov[  is_positive,],
+                                                inds_helps=inds_helps[is_positive],
+                                                s.hat= leebounds_ortho_result$s.hat[  is_positive,],
+                                                y.hat=leebounds_ortho_result$y.hat[is_positive,],
+                                                weight=Lee_data$DSGN_WGT.y[  is_positive],ortho=TRUE) 
+ orthoestimates_plb[,i]<-GetBounds(leebounds_ortho_result2)
+ 
+ if (i==3) {
+   leebounds_ortho_result2<-summary_subjects_positive_lower_bound(leedata=leedata_cov,
+                                                 s.hat= leebounds_ortho_result$s.hat,
+                                                 y.hat=leebounds_ortho_result$y.hat,form_outcome=as.formula(paste0("outcome~",paste0(selected_vars,collapse="+"))),
+                                                 weight=Lee_data$DSGN_WGT.y) 
+   orthoestimates_plb[,i]<-GetBounds(leebounds_ortho_result2)
+ }
+ estimated_orthobounds_bb<-main_bb(leedata_cov,N_rep=N_rep,function_name=summary_subjects_positive_lower_bound,
+                                   y.hat= leebounds_ortho_result$y.hat,s.hat=leebounds_ortho_result$s.hat
+                                    ,weight=Lee_data$DSGN_WGT.y,form_outcome=as.formula(paste0("outcome~",paste0(selected_vars,collapse="+"))))
+ CR_ortho[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb[!is.na(apply( estimated_orthobounds_bb,1,sum)),],ATE_est=    orthoestimates_plb[,i],ci_alpha=ci_alpha)
+ IM_ortho[,i]<-imbens_manski(estimated_orthobounds_bb,orthoestimates_plb[,i], ci_alpha=ci_alpha)
+ 
+ 
 }
-
-## positive lower bound
-estimates_table<-rbind(orthoestimates_postlasso)
-estimates_table<-t(estimates_table)
-colnames(estimates_table)<-c("Lee_2009_lb_nonmonotone","Lee_2009_ub_nonmonotone")
-
-CR_table<-rbind(CR_ortho)
-CR_table<-t(CR_table)
-colnames(CR_table)<-c("Lee_2009_lb_nonmonotone","Lee_2009_ub_nonmonotone")
-
-
-IM_table<-rbind(IM_ortho)
-IM_table<-t(IM_table)
-estimates_table<-apply(estimates_table,2,round,3)
-CR_table<-apply(CR_table,2,round,3)
-IM_table<-apply(IM_table,2,round,3)
-
-print("Saving estimates in STEP3_Estimate_Bounds/csv/ ...")
-sink(file=NULL)
-closeAllConnections()
-write.csv(estimates_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_estimates_lasso.csv"))
-write.csv(CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_CR_lasso.csv"))
-write.csv(IM_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_IM_lasso.csv"))
-
-
-

@@ -6,11 +6,10 @@ library(sas7bdat)
 library(SDMTools)
 library(expm)
 library(feather)
-library(hdm)
-
+library(reldist)
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 ### load data
-sink(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/Table1_Col4_lasso.log"))
+#sink(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/Table1_Col123.log"))
 print ("Loading data ...")
 Lee_data_covariates<-read.csv(paste0(my_path,"/JobCorps_data/dataLee2009.csv"))
 Lee_data_all_covariates<-read_feather(paste0(my_path,"/JobCorps_data/dataLee2009covariates3.feather"))
@@ -24,7 +23,7 @@ source(paste0(my_path,"/R/auxiliary.R"))
 source(paste0(my_path,"/R/orthogonal_correction.R"))
 source(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/utils.R"))
 selected_weeks<-c(45,90,104,135,180,208)
-N_rep=800
+N_rep=300
 ci_alpha=0.05
 quantile_grid_size=0.01
 
@@ -57,10 +56,10 @@ selected_covs_selection[[1]]<-c("treat:EARN_YR","treat:R_HOME1")
 selected_covs_selection[[2]]<-c("treat:EARN_YR","treat:R_HOME1")
 selected_covs_selection[[3]]<-c("treat:EARN_YR","treat:R_HOME1","treat:AGE")
 selected_covs_selection[[4]]<-c("treat:EARN_YR","treat:R_HOME1","treat:AGE","treat:FEMALE")
-selected_covs_selection[[5]]<-c(baseline_varnames,paste0("treat:",baseline_varnames),"treat:EARN_CMP")
-selected_covs_selection[[6]]<-unique(c(baseline_varnames,"treat:EARN_YR","treat:EARN_CMP"  ))
+selected_covs_selection[[5]]<-c(baseline_varnames,paste0("treat:",baseline_varnames))
+selected_covs_selection[[6]]<-baseline_varnames
 selected_covs_outcome<-list()
-for (i in 1:6) {
+for (i in 1:5) {
   # prepare data
   week<-selected_weeks[i]
   print (paste0("Results for week ", week))
@@ -93,7 +92,7 @@ for (i in 1:6) {
   selected_names<-setdiff( c(setdiff(covs[[i]],grep("treat:",covs[[i]],value=TRUE)),unlist(strsplit(grep("treat:",covs[[i]],value=TRUE),"treat:"))),   c("","treat","(Intercept)") )
   
   form_nonmonotone_ss<-as.formula(paste0("selection~treat*(",paste0(selected_names,collapse="+"), ")*(",paste0(selected_names,collapse="+"),")" ))
-  
+ 
   
   
   glm.fit<-estimate_selection(form=form_nonmonotone_ss,leedata=leedata_cov,selection_function_name = "rlassologit",
@@ -111,20 +110,7 @@ for (i in 1:6) {
   
   selected_covs_outcome[[i]]<-setdiff(names(lm.fit$coefficients)[lm.fit$coefficients!=0],c("(Intercept)"))
   # estimates_nonmonotone[,i]<-GetBounds(leebounds_wout_monotonicity(leedata_cov,p.0.star))
-  if (i==3) {
-    selected_covs_outcome[[i]]<-c("PAY_RENT1", "HH_INC5" ,  "PERS_INC1", "HRWAGER"  , "WKEARNR" ,  "FEMALE" ,
-                                  "RACE_ETH2", "NTV_LANG3",  "IMP_PAR1" , "EARN_YR" ,  "MONINED" ,  "NUMBJOBS"
-    )
-  }
-  if (i==4) {
-    selected_covs_outcome[[i]]<-c(selected_covs_outcome[[i]], "BLACK")
-  }
-  if (i==5) {
-    selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], baseline_varnames))
-  }
-  if (i==6) {
-    selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], "BLACK","AGE"))
-  }
+  
   leebounds_ortho_result<-ortho_leebounds(leedata_cov=leedata_cov,s.hat= s.hat,
                                           quantile_grid_size = quantile_grid_size,
                                           variables_for_outcome=setdiff(selected_covs_outcome[[i]], c("REC_ED5","REC_ED8")),min_wage=min_wage,
@@ -138,8 +124,8 @@ for (i in 1:6) {
   estimated_orthobounds_bb<-main_bb(leedata_cov,N_rep=N_rep,function_name=second_stage_wrapper,
                                     y.hat= leebounds_ortho_result$y.hat,s.hat=leebounds_ortho_result$s.hat,
                                     inds_helps=leebounds_ortho_result$inds_helps,weight=Lee_data$DSGN_WGT.y)
-  CR_ortho[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb,ATE_est=    orthoestimates_postlasso[,i],ci_alpha=ci_alpha)
-  IM_ortho[,i]<-imbens_manski(estimated_orthobounds_bb,orthoestimates_postlasso[,i], ci_alpha=ci_alpha)
+   CR_ortho[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb,ATE_est=    orthoestimates_postlasso[,i],ci_alpha=ci_alpha)
+   IM_ortho[,i]<-imbens_manski(estimated_orthobounds_bb,orthoestimates_postlasso[,i], ci_alpha=ci_alpha)
   
 }
 

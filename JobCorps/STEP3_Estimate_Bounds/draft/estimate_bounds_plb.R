@@ -10,7 +10,7 @@ library(hdm)
 
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 ### load data
-sink(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/Table1_Col4_lasso.log"))
+#sink(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/Table1_Col123.log"))
 print ("Loading data ...")
 Lee_data_covariates<-read.csv(paste0(my_path,"/JobCorps_data/dataLee2009.csv"))
 Lee_data_all_covariates<-read_feather(paste0(my_path,"/JobCorps_data/dataLee2009covariates3.feather"))
@@ -24,7 +24,7 @@ source(paste0(my_path,"/R/auxiliary.R"))
 source(paste0(my_path,"/R/orthogonal_correction.R"))
 source(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/utils.R"))
 selected_weeks<-c(45,90,104,135,180,208)
-N_rep=800
+N_rep=300
 ci_alpha=0.05
 quantile_grid_size=0.01
 
@@ -32,6 +32,8 @@ orthoestimates_postlasso<-matrix(0,2,length(selected_weeks))
 CR_ortho<-matrix(0,2,length(selected_weeks))
 IM_ortho<-matrix(0,2,length(selected_weeks))
 
+estimates_plb<-matrix(0,2,length(selected_weeks))
+frac_positive<-rep(0,length(selected_weeks))
 #### Estimate selection equation
 baseline_varnames<-c("FEMALE","AGE","BLACK","HISP","OTHERRAC",
                      "MARRIED","TOGETHER","SEPARATED","HASCHLD","NCHLD","HGC","HGC_MOTH","HGC_FATH","EVARRST",
@@ -57,9 +59,10 @@ selected_covs_selection[[1]]<-c("treat:EARN_YR","treat:R_HOME1")
 selected_covs_selection[[2]]<-c("treat:EARN_YR","treat:R_HOME1")
 selected_covs_selection[[3]]<-c("treat:EARN_YR","treat:R_HOME1","treat:AGE")
 selected_covs_selection[[4]]<-c("treat:EARN_YR","treat:R_HOME1","treat:AGE","treat:FEMALE")
-selected_covs_selection[[5]]<-c(baseline_varnames,paste0("treat:",baseline_varnames),"treat:EARN_CMP")
-selected_covs_selection[[6]]<-unique(c(baseline_varnames,"treat:EARN_YR","treat:EARN_CMP"  ))
+selected_covs_selection[[5]]<-c(baseline_varnames,paste0("treat:",baseline_varnames))
+selected_covs_selection[[6]]<-baseline_varnames
 selected_covs_outcome<-list()
+
 for (i in 1:6) {
   # prepare data
   week<-selected_weeks[i]
@@ -85,20 +88,20 @@ for (i in 1:6) {
   
   
   ## monotonicity-preserving bounds ##
-  glm.fit<-estimate_selection(form=form_nonmonotone_lasso_std,leedata=leedata_cov,selection_function_name = "rlassologit",
-                              penalty=list(lambda=300)
-  )
-  covs[[i]]<-names(glm.fit$coefficients)
-  
-  selected_names<-setdiff( c(setdiff(covs[[i]],grep("treat:",covs[[i]],value=TRUE)),unlist(strsplit(grep("treat:",covs[[i]],value=TRUE),"treat:"))),   c("","treat","(Intercept)") )
+  leedata_cov$selection<-as.factor( leedata_cov$selection)
+  glm.fit<-ranger(selection~.,leedata_cov[,c("treat",my_names,"selection")],probability=TRUE,
+                  importance="permutation")
+  #s.hat<-predict_selection(glm.fit,leedata_cov)
+  selected_names<-setdiff(names(glm.fit$variable.importance[glm.fit$variable.importance>0]),"treat")
   
   form_nonmonotone_ss<-as.formula(paste0("selection~treat*(",paste0(selected_names,collapse="+"), ")*(",paste0(selected_names,collapse="+"),")" ))
   
+  leedata_cov$selection<-as.numeric(as.character(leedata_cov$selection))
   
-  
+  leedata_cov$selection<-as.numeric(as.character(leedata_cov$selection))
   glm.fit<-estimate_selection(form=form_nonmonotone_ss,leedata=leedata_cov,selection_function_name = "rlassologit",
                               names_to_include=selected_covs_selection[[i]],
-                              penalty=list(lambda=850))
+                              penalty=list(lambda=penalty[i]))
   
   s.hat<-as.data.frame(predict_selection(glm.fit,leedata_cov))
   p.0.star<-s.hat$s.0.hat/s.hat$s.1.hat
@@ -106,65 +109,28 @@ for (i in 1:6) {
   inds_hurts<-(!inds_helps)
   prob_helps[i]<-mean(p.0.star<1)
   
-  lm.fit<-rlasso(as.formula('outcome~.'), data=leedata_cov[leedata_cov$selection==1 & leedata_cov$treat==1,setdiff(colnames(leedata_cov),
-                                                                                                                   c("selection","MPRID","weights" ))])
-  
-  selected_covs_outcome[[i]]<-setdiff(names(lm.fit$coefficients)[lm.fit$coefficients!=0],c("(Intercept)"))
-  # estimates_nonmonotone[,i]<-GetBounds(leebounds_wout_monotonicity(leedata_cov,p.0.star))
-  if (i==3) {
-    selected_covs_outcome[[i]]<-c("PAY_RENT1", "HH_INC5" ,  "PERS_INC1", "HRWAGER"  , "WKEARNR" ,  "FEMALE" ,
-                                  "RACE_ETH2", "NTV_LANG3",  "IMP_PAR1" , "EARN_YR" ,  "MONINED" ,  "NUMBJOBS"
-    )
-  }
-  if (i==4) {
-    selected_covs_outcome[[i]]<-c(selected_covs_outcome[[i]], "BLACK")
-  }
-  if (i==5) {
-    selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], baseline_varnames))
-  }
-  if (i==6) {
-    selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], "BLACK","AGE"))
-  }
+
+  lm.fit<-ranger(outcome~., data=leedata_cov[leedata_cov$selection==1 & leedata_cov$treat==1,setdiff(colnames(leedata_cov),
+                                                                                                     c("selection","MPRID","weights" ))],
+                 importance="permutation")
+  selected_names<-setdiff(names(lm.fit$variable.importance[lm.fit$variable.importance>0]),"treat")
+  lm.lasso.fit<-rlasso(as.formula('outcome~.'), data=leedata_cov[leedata_cov$selection==1 & leedata_cov$treat==1,c("outcome",selected_names)],
+                 penalty=list(lambda=850))
+
   leebounds_ortho_result<-ortho_leebounds(leedata_cov=leedata_cov,s.hat= s.hat,
                                           quantile_grid_size = quantile_grid_size,
-                                          variables_for_outcome=setdiff(selected_covs_outcome[[i]], c("REC_ED5","REC_ED8")),min_wage=min_wage,
+                                          variables_for_outcome=setdiff(names(lm.lasso.fit$coefficients[ lm.lasso.fit$coefficients!=0]),
+                                                                        "(Intercept)"),min_wage=min_wage,
                                           max_wage=max_wage,distribution_functionname="rq",
                                           sort_quantiles= TRUE,ortho=TRUE,c_quant=0,weight=Lee_data$DSGN_WGT.y) 
   
   
-  orthoestimates_postlasso[,i]<-GetBounds(leebounds_ortho_result)
-  
-  
-  estimated_orthobounds_bb<-main_bb(leedata_cov,N_rep=N_rep,function_name=second_stage_wrapper,
-                                    y.hat= leebounds_ortho_result$y.hat,s.hat=leebounds_ortho_result$s.hat,
-                                    inds_helps=leebounds_ortho_result$inds_helps,weight=Lee_data$DSGN_WGT.y)
-  CR_ortho[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb,ATE_est=    orthoestimates_postlasso[,i],ci_alpha=ci_alpha)
-  IM_ortho[,i]<-imbens_manski(estimated_orthobounds_bb,orthoestimates_postlasso[,i], ci_alpha=ci_alpha)
-  
+  orthoestimates_postlasso[,i]<-GetBounds( leebounds_ortho_result)
+  res<-summary_subjects_positive_lower_bound(leedata_cov_total=leedata_cov[,c("treat","selection","outcome",setdiff(names(lm.lasso.fit$coefficients[ lm.lasso.fit$coefficients!=0]),
+                                                                                                                    "(Intercept)"))],
+                                        s.hat=   leebounds_ortho_result$s.hat,y.hat=  leebounds_ortho_result$y.hat,
+                                        weight=Lee_data$DSGN_WGT.y,myfun=rlasso
+                                             )
+  estimates_plb[,i]<-GetBounds(res)
+  frac_positive[i]<-GetFraction(res)  
 }
-
-## positive lower bound
-estimates_table<-rbind(orthoestimates_postlasso)
-estimates_table<-t(estimates_table)
-colnames(estimates_table)<-c("Lee_2009_lb_nonmonotone","Lee_2009_ub_nonmonotone")
-
-CR_table<-rbind(CR_ortho)
-CR_table<-t(CR_table)
-colnames(CR_table)<-c("Lee_2009_lb_nonmonotone","Lee_2009_ub_nonmonotone")
-
-
-IM_table<-rbind(IM_ortho)
-IM_table<-t(IM_table)
-estimates_table<-apply(estimates_table,2,round,3)
-CR_table<-apply(CR_table,2,round,3)
-IM_table<-apply(IM_table,2,round,3)
-
-print("Saving estimates in STEP3_Estimate_Bounds/csv/ ...")
-sink(file=NULL)
-closeAllConnections()
-write.csv(estimates_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_estimates_lasso.csv"))
-write.csv(CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_CR_lasso.csv"))
-write.csv(IM_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_IM_lasso.csv"))
-
-
-
