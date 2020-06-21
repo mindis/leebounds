@@ -17,6 +17,9 @@ Required R libraries are: ```tidyverse``` and ```sas7bdat```
 -- takes ```baseline.sas7bdat``` and ```dataLee2009.csv``` (see previous step)
 
 -- identifies all categorical variables and recodes them as binary indicators. Output is not loaded at GitHub due to memory constraint.
+
+```prepare_covariates3.R```  
+-- additionally pre-processes weekly training, schooling, work history to reduce the dimension from 5177 to 470 (for bounds only)
 ### Step 2: Test monotonicity
 ```
 Rscript evidence_against_monotonicity.R
@@ -31,26 +34,26 @@ Rscript replicate_lee.R
 ```
 computes Table 1 bounds
 
-### Step 2: Estimate bounds for Table JobCorps 
+### Step 3: Estimate bounds for Table JobCorps 
 
 ```
 module load R
 Rscript estimate_bounds.R
 ```  
 
-replicates Columns 1,2,3,4 from Table JobCorps
+replicates Columns 1,2,3 from Table JobCorps
 
 ```Rscript estimate_lasso_bounds.R``` 
 
-replicates Columns 5,6 from Table JobCorps. Output log is Table_JobCorps.txt. 
+replicates Columns 4 from Table JobCorps. 
 Required R libraries are: ```hdm``` and ```expm```
 
-### Step 3. Miscellaneous  
+### Step 4. Miscellaneous  
 ```
 Rscript estimate_bounds_nontreated_wage.R
 ```
 computes estimates for Figure 3,5
-### Step 4. Print Figures
+### Step 5. Print Figures
 ```
 Rscript Figure1.R Figure2.R Figure3.R Figure4.R Figure5.R 
 ```
