@@ -57,7 +57,3 @@ computes estimates for Figure 3,5
 ```
 Rscript Figure1.R Figure2.R Figure3.R Figure4.R Figure5.R 
 ```
-### Step 5. Print Tables
-```
-Rscript Figure1.R Figure2.R Figure3.R Figure4.R Figure5.R 
-```
