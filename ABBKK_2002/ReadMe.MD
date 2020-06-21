@@ -10,7 +10,7 @@ The scripts are contained in sub‐directories Step1_Prepare_Data, Step2_Estimat
 
 -- merges them by ```ID```
 
--- adds indicator of missigness for each baseline covariate. Required R libraries are: ```tidyverse``` and ```sas7bdat'''
+-- adds indicator of missigness for each baseline covariate. Required R libraries are: ```tidyverse``` and ```sas7bdat```
 
 ### Step 2: Estimate bounds 
 
