@@ -3,8 +3,7 @@ rm(list=ls())
 library(ggplot2)
 library(latex2exp)
 # install.packages(c("ggforce","latex2exp"))
-library(geomnet)
-library(ggforce)
+
 
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 aspect_ratio<-1.5
@@ -33,8 +32,8 @@ ggplot(data=Figure1_dataset)+aes(x=weeks,y=delta,group=group)+
 ggsave(paste0(my_path,"/JobCorps/Figures/Figure1_selected.png"),height=7,width=aspect_ratio*7)
 
 
-Figure2_dataset<-read.csv(paste0(my_path,"/JobCorps/STEP3_MISC/csv/Figure2_selected_covs.csv"))
-test_result<-read.csv(paste0(my_path,"/JobCorps/STEP3_MISC/csv/test_result.csv"))
+Figure2_dataset<-read.csv(paste0(my_path,"/JobCorps/STEP5_Print_Figures/csv/Figure2_selected_covs.csv"))
+test_result<-read.csv(paste0(my_path,"/JobCorps/STEP5_Print_Figures/csv/test_result.csv"))
 
 weeks<-1:208
 weeks_001<-test_result$pvalue<=0.01
@@ -103,7 +102,13 @@ ggplot()+
             aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
             fill = "grey", alpha = 0.2)+
   geom_rect(data = data.frame(xmin = 135,
-                              xmax = 168,
+                              xmax = 156,
+                              ymin = -Inf,
+                              ymax = Inf),
+            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+            fill = "grey", alpha = 0.2)+
+  geom_rect(data = data.frame(xmin = 158,
+                              xmax = 172,
                               ymin = -Inf,
                               ymax = Inf),
             aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
