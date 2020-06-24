@@ -24,7 +24,7 @@ source(paste0(my_path,"/R/auxiliary.R"))
 source(paste0(my_path,"/R/orthogonal_correction.R"))
 source(paste0(my_path,"/JobCorps/STEP3_Estimate_Bounds/utils.R"))
 selected_weeks<-c(45,90,104,135,180,208)
-N_rep=800
+N_rep=300
 ci_alpha=0.05
 quantile_grid_size=0.01
 
@@ -43,10 +43,6 @@ Lee_data_covariates<-Lee_data[,baseline_varnames]
 selected_covs_selection<-list()
 selected_covs_outcome<-list()
 
-penalty<-rep(0,6)
-penalty[2]<-850
-penalty[3]<-550
-penalty[6]<-550
 my_names<-setdiff(colnames(Lee_data_all_covariates),c("treat","selection","outcome","(Intercept)","X.Intercept.","MPRID" ))
 form_nonmonotone_lasso_std<-as.formula(paste0("selection~(treat)*(", paste0(my_names,collapse="+"),")"))
 covs<-list()
@@ -58,7 +54,7 @@ selected_covs_selection[[2]]<-c("treat:EARN_YR","treat:R_HOME1")
 selected_covs_selection[[3]]<-c("treat:EARN_YR","treat:R_HOME1","treat:AGE")
 selected_covs_selection[[4]]<-c("treat:EARN_YR","treat:R_HOME1","treat:AGE","treat:FEMALE")
 selected_covs_selection[[5]]<-c(baseline_varnames,paste0("treat:",baseline_varnames),"treat:EARN_CMP")
-selected_covs_selection[[6]]<-unique(c(baseline_varnames,"treat:EARN_YR","treat:EARN_CMP"  ))
+selected_covs_selection[[6]]<-unique(c(baseline_varnames,paste0("treat:",baseline_varnames),"treat:EARN_CMP" ))
 selected_covs_outcome<-list()
 for (i in 1:6) {
   # prepare data
@@ -123,7 +119,7 @@ for (i in 1:6) {
     selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], baseline_varnames))
   }
   if (i==6) {
-    selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], "BLACK","AGE"))
+    selected_covs_outcome[[i]]<-unique(c(selected_covs_outcome[[i]], baseline_varnames))
   }
   leebounds_ortho_result<-ortho_leebounds(leedata_cov=leedata_cov,s.hat= s.hat,
                                           quantile_grid_size = quantile_grid_size,
@@ -159,12 +155,12 @@ estimates_table<-apply(estimates_table,2,round,3)
 CR_table<-apply(CR_table,2,round,3)
 IM_table<-apply(IM_table,2,round,3)
 
-print("Saving estimates in STEP3_Estimate_Bounds/csv/ ...")
+print("Saving estimates in STEP5_Estimate_Bounds/csv/ ...")
 sink(file=NULL)
 closeAllConnections()
-write.csv(estimates_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_estimates_lasso.csv"))
-write.csv(CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_CR_lasso.csv"))
-write.csv(IM_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col1235_IM_lasso.csv"))
+write.csv(estimates_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col4_estimates_lasso.csv"))
+write.csv(CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col4_CR_lasso.csv"))
+write.csv(IM_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col4_IM_lasso.csv"))
 
 
 
