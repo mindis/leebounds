@@ -5,7 +5,7 @@ print ("Loading packages ...")
 library(reldist)
 library(expm)
 library(feather)
-
+library(tidyverse)
 my_path<-"/net/holyparkesec/data/tata/leebounds/"
 ### load data
 sink(paste0(my_path,"/JobCorps/STEP2_Test_Monotonicity/Table_Replicate_Lee.log"))
@@ -77,11 +77,11 @@ for (i in 1:length(selected_weeks)) {
   
   print ("Computing  Lee (2009) estimates (column 1) ...")
   ## compute bounds 
-  estimates[,i]<-GetBounds(leebounds_unknown_sign(leedata_week))
+  estimates[,i]<-GetBounds(leebounds(leedata_week))
   ##  bootstrap draws of bounds
   print ("Computing  Lee (2009) confidence region by regular bootstrap (column 1) ...")
   
-   bounds_bb<-main_bb(function_name=leebounds_unknown_sign,mydata=leedata_week,N_rep=N_rep)
+   bounds_bb<-main_bb(function_name=leebounds,mydata=leedata_week,N_rep=N_rep)
   # ## confidence region for identified set
     CR[,i]<-compute_confidence_region(bounds_bb,estimates[,i], ci_alpha=ci_alpha )
    IM_CR[,i]<-imbens_manski(bounds_bb,estimates[,i], ci_alpha=ci_alpha)

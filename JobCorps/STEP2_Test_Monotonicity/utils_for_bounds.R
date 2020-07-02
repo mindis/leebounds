@@ -19,9 +19,9 @@ Lee_grouping<-function(x,cutoffs=c(-Inf,6.75,7,7.50,8.50,Inf)) {
 Lee_sharp_bounds<-function(leedata,group_name,treat_helps) {
   colnames(leedata)[colnames(leedata)==group_name]<-"group"
   leedata<-group_by(leedata,group)
-  bounds_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds_unknown_sign,treat_helps=treat_helps,keep=TRUE),GetTrimmedBounds)),ncol=2,byrow=TRUE)
-  p0s_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds_unknown_sign,treat_helps=treat_helps,keep=TRUE),GetThresh)),ncol=1,byrow=TRUE)
-  odds_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds_unknown_sign,treat_helps=treat_helps,keep=TRUE),GetOdds)),ncol=1,byrow=TRUE)
+  bounds_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds,treat_helps=treat_helps,keep=TRUE),GetTrimmedBounds)),ncol=2,byrow=TRUE)
+  p0s_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds,treat_helps=treat_helps,keep=TRUE),GetThresh)),ncol=1,byrow=TRUE)
+  odds_by_group<-matrix(unlist(lapply(group_map(leedata,leebounds,treat_helps=treat_helps,keep=TRUE),GetOdds)),ncol=1,byrow=TRUE)
   #print(p0s_by_group)
   if (treat_helps==TRUE)  {
     pmf<-table(leedata$group[leedata$selection==1 & leedata$treat ==0])/sum(table(leedata$group[leedata$selection==1 & leedata$treat ==0]))
@@ -57,7 +57,7 @@ GetTrimmedBounds<-function(x) {
 }
 
 
-leebounds_unknown_sign<-function(leedata,treat_helps=NULL,...) {
+leebounds<-function(leedata,treat_helps=NULL,...) {
   # print(treat_helps)
   d<-leedata$treat
   s<-leedata$selection
