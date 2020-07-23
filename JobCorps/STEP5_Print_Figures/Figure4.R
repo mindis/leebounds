@@ -30,12 +30,12 @@ ggplot(df) +
   geom_abline(slope=1,intercept=0.05,col="black",linetype="dashed")+
   geom_abline(slope=1,intercept=0.125,col="black",linetype="dashed")+
   geom_point(aes(x=x,y=y),col="black")+
-  annotate("text", x=-0.18, y=0.19, label=TeX(sprintf('$\\beta_{104}+\\beta_{208} = 0 $')),size=4,angle=-45)+
-  annotate("text", x=-0.100, y=-0.041, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = 0.05 $')),size=4,angle=45)+
-  annotate("text", x=-0.131, y=-0.000, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = 0.13 $')),size=4,angle=45)+
-  annotate("text", x=0.18, y=0.19, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = 0 $')),size=4,angle=45)+
-  annotate("text", x=-0.085, y=-0.13, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = -0.05 $')),size=4,angle=45)+
-  annotate("text", x=-0.05, y=-0.17, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = -0.13 $')),size=4,angle=45)+
+  annotate("text", x=-0.175, y=0.185, label=TeX(sprintf('$\\beta_{104}+\\beta_{208} = 0 $')),size=5,angle=-45)+
+  annotate("text", x=-0.150, y=-0.090, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = 0.05 $')),size=6.5,angle=45)+
+  #annotate("text", x=-0.131, y=-0.000, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = 0.13 $')),size=8,angle=45)+
+  annotate("text", x=0.175, y=0.185, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = 0 $')),size=5,angle=45)+
+  annotate("text", x=-0.095, y=-0.135, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = -0.05 $')),size=6.5,angle=45)+
+  #annotate("text", x=-0.05, y=-0.17, label=TeX(sprintf('$-\\beta_{104}+\\beta_{208} = -0.13 $')),size=8,angle=45)+
   geom_circle(aes(x0 = beta10, y0 = beta20, r = R),linetype=1,col="red",lwd=1.1)+
   geom_circle(aes(x0 = beta10_pointwise, y0 = beta20_pointwise, r = R_pointwise),linetype="dotdash",col="red",lwd=1.1)
-ggsave(paste0(my_path,"/JobCorps/Figures/Figure4.png"),height=7,width=7)
+ggsave(paste0(my_path,"/JobCorps/Figures/Figure4_selected.png"),height=7,width=7)
