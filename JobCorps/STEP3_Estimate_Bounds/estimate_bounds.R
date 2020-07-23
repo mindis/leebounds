@@ -1,9 +1,11 @@
-rm(list=ls())
+#rm(list=ls())
+
+### Table "JobCorps" week
 
 ## load packages
 print ("Loading packages ...")
 library(sas7bdat)
-library(SDMTools)
+library(stats)
 library(expm)
 library(feather)
 library(reldist)
@@ -31,15 +33,12 @@ quantile_grid_size=0.01
 # Column 1
 estimates_nonmonotone<-matrix(0,2,length(selected_weeks))
 CR_nonmonotone<-matrix(0,2,length(selected_weeks))
-IM_nonmonotone<-matrix(0,2,length(selected_weeks))
 # Column 2
 orthoestimates<-matrix(0,2,length(selected_weeks))
 CR_ortho<-matrix(0,2,length(selected_weeks))
-IM_ortho<-matrix(0,2,length(selected_weeks))
 # Column 3
 orthoestimates2<-matrix(0,2,length(selected_weeks))
 CR_ortho2<-matrix(0,2,length(selected_weeks))
-IM_ortho2<-matrix(0,2,length(selected_weeks))
 
 
 #### Estimate selection equation
@@ -50,7 +49,7 @@ baseline_varnames<-c("FEMALE","AGE","BLACK","HISP","OTHERRAC",
                      "WKEARNR")
 Lee_data_covariates<-Lee_data[,baseline_varnames]
 
-selected_names<-unique(setdiff(c( "DRG_SUMP2","TYPEJOBB9","REASED_R4","IMP_PRO1","FRQ_POT3","R_HOME1","WELF5AC","TYPEWORR5","MOS_AFDC8",colnames(Lee_data_covariates)),c("treat","selection","outcome","(Intercept)","X.Intercept.")))
+selected_names<-unique(setdiff(c( "DRG_SUMP2","IMP_PRO1","FRQ_POT3","R_HOME1","TYPEWORR5","MOS_AFDC8",colnames(Lee_data_covariates)),c("treat","selection","outcome","(Intercept)","X.Intercept.")))
 form_nonmonotone<-as.formula(paste0("selection~(treat)*(", paste0(selected_names,collapse="+"),")"))
 form_nonmonotone2<-as.formula(paste0("selection~(treat+AGE+EARN_YR+WKEARNR+HRSWK_JR+MOSINJOB)*(", paste0(selected_names,collapse="+"),")"))
 
@@ -89,37 +88,29 @@ for (i in c(1:6)) {
   inds_hurts<-(!inds_helps)
   estimates_nonmonotone[,i]<-GetBounds(leebounds_wout_monotonicity(leedata_cov,p.0.star))
   
-  if (TRUE) {
-  bounds_bb<-main_bb(function_name=leebounds_wout_monotonicity,p.0.star=p.0.star,mydata=leedata_week[,c("treat","selection","outcome")],N_rep=N_rep)
+  
+  bounds_bb<-main_bb(function_name=leebounds_wout_monotonicity,p.0.star=p.0.star,mydata=leedata_week[,c("treat","selection","outcome","weights")],N_rep=N_rep)
   ## confidence region for identified set
   print ("Computing confidence region for Lee (2009) without monotonicity  estimates by regular bootstrap (column 3) ...")
   CR_nonmonotone[,i]<-compute_confidence_region(bounds_bb,estimates_nonmonotone[,i], ci_alpha=ci_alpha )
-  IM_nonmonotone[,i]<-imbens_manski(bounds_bb,estimates_nonmonotone[,i], ci_alpha=ci_alpha)
-  }
+ 
   ### COLUMN 2
   print ("Computing  Lee (2009) estimates without monotonicity (column 2) ...")
   
   
   leebounds_ortho_result<-ortho_leebounds(leedata_cov=leedata_cov,s.hat=s.hat,
                                           quantile_grid_size = quantile_grid_size,
-                                          variables_for_outcome=c(baseline_varnames),min_wage=min_wage,
+                                          variables_for_outcome=selected_names,min_wage=min_wage,
                                           max_wage=max_wage,distribution_functionname="rq",
                                           sort_quantiles= TRUE,weights=Lee_data$DSGN_WGT.y)
   
   
   orthoestimates[,i]<-GetBounds(leebounds_ortho_result)
+  CR_ortho[,i]<-c(leebounds_ortho_result$lower_bound_ci, leebounds_ortho_result$upper_bound_ci)
+
   
   
-  
-  
-  if (TRUE) {
-  estimated_orthobounds_bb<-main_bb(leedata_cov,N_rep=N_rep,function_name=second_stage_wrapper,
-                                      y.hat= leebounds_ortho_result$y.hat,s.hat=leebounds_ortho_result$s.hat,
-                                       inds_helps=leebounds_ortho_result$inds_helps)
-  CR_ortho[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb,ATE_est=  orthoestimates[,i],ci_alpha=ci_alpha)
-  IM_ortho[,i]<-imbens_manski(estimated_orthobounds_bb,orthoestimates[,i], ci_alpha=ci_alpha)
-  
-  }
+
   ### COLUMN 3
   print ("Computing  Lee (2009) estimates without monotonicity (column 3) ...")
   
@@ -128,21 +119,15 @@ for (i in c(1:6)) {
                                           selection_function_name="glm",
                                           selection_function=glm,
                                           quantile_grid_size = quantile_grid_size,
-                                          variables_for_outcome=c(baseline_varnames),min_wage=min_wage,
+                                          variables_for_outcome=selected_names,min_wage=min_wage,
                                           max_wage=max_wage,distribution_functionname="rq",
                                           sort_quantiles= TRUE,weights=Lee_data$DSGN_WGT.y)
   
   
   orthoestimates2[,i]<-GetBounds(leebounds_ortho_result2)
+  CR_ortho2[,i]<-c(leebounds_ortho_result2$lower_bound_ci, leebounds_ortho_result2$upper_bound_ci)
   
-  if (TRUE) {
-  estimated_orthobounds_bb2<-main_bb(leedata_cov,N_rep=N_rep,function_name=second_stage_wrapper,
-                                    y.hat= leebounds_ortho_result2$y.hat,s.hat=leebounds_ortho_result2$s.hat,
-                                    inds_helps=leebounds_ortho_result2$inds_helps)
-  CR_ortho2[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb2,ATE_est=  orthoestimates2[,i],ci_alpha=ci_alpha)
-  IM_ortho2[,i]<-imbens_manski(estimated_orthobounds_bb2,orthoestimates2[,i], ci_alpha=ci_alpha)
-  
-  }
+
 }
   
 
@@ -159,21 +144,18 @@ colnames(CR_table)<-c("Lee_2009_lb_nonmonotone","Lee_2009_ub_nonmonotone",
                       "OrthoLee_28_lb2","OrthoLee_28_ub2")
 
 
-IM_table<-rbind(IM_nonmonotone,IM_ortho,IM_ortho2)
-IM_table<-t(IM_table)
+
 estimates_table<-apply(estimates_table,2,round,3)
 CR_table<-apply(CR_table,2,round,3)
-IM_table<-apply(IM_table,2,round,3)
 
 print("Saving estimates in STEP3_Estimate_Bounds/csv/ ...")
 sink(file=NULL)
 closeAllConnections()
 write.csv(estimates_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col123_estimates.csv"))
 write.csv(CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col123_CR.csv"))
-write.csv(IM_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col123_IM.csv"))
 
 ### save as latex table
-table<-print_table(estimates_table,CR_table,IM_table,digs=3)
+table<-print_table(estimates_table,CR_table,digs=3)
 table<-print(xtable(table,type="latex",include.rownames =FALSE ))
 write.table(table,paste0(my_path,"/JobCorps/STEP5_Print_Tables/Table123.txt"),append=TRUE)
 

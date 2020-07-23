@@ -127,6 +127,7 @@ for (i in 1:6) {
                                           max_wage=max_wage,distribution_functionname="rq",
                                           sort_quantiles= TRUE,ortho=TRUE,c_quant=0,weight=Lee_data$DSGN_WGT.y) 
   
+ 
   
   orthoestimates_postlasso[,i]<-GetBounds(leebounds_ortho_result)
   
@@ -135,9 +136,10 @@ for (i in 1:6) {
                                     y.hat= leebounds_ortho_result$y.hat,s.hat=leebounds_ortho_result$s.hat,
                                     inds_helps=leebounds_ortho_result$inds_helps,weight=Lee_data$DSGN_WGT.y)
   CR_ortho[,i]<-compute_confidence_region(ATE_boot=estimated_orthobounds_bb,ATE_est=    orthoestimates_postlasso[,i],ci_alpha=ci_alpha)
-  IM_ortho[,i]<-imbens_manski(estimated_orthobounds_bb,orthoestimates_postlasso[,i], ci_alpha=ci_alpha)
-  
+ 
 }
+
+
 
 ## positive lower bound
 estimates_table<-rbind(orthoestimates_postlasso)
@@ -149,18 +151,14 @@ CR_table<-t(CR_table)
 colnames(CR_table)<-c("Lee_2009_lb_nonmonotone","Lee_2009_ub_nonmonotone")
 
 
-IM_table<-rbind(IM_ortho)
-IM_table<-t(IM_table)
 estimates_table<-apply(estimates_table,2,round,3)
 CR_table<-apply(CR_table,2,round,3)
-IM_table<-apply(IM_table,2,round,3)
 
 print("Saving estimates in STEP5_Estimate_Bounds/csv/ ...")
 sink(file=NULL)
 closeAllConnections()
 write.csv(estimates_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col4_estimates_lasso.csv"))
 write.csv(CR_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col4_CR_lasso.csv"))
-write.csv(IM_table,paste0(my_path,"JobCorps/STEP5_Print_Tables/csv/Table1_Col4_IM_lasso.csv"))
 
 
 
