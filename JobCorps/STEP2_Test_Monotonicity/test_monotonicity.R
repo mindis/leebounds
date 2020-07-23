@@ -47,10 +47,16 @@ myres_M0=foreach(week=60:79, .combine = 'cbind',.packages = c("tidyverse"))  %do
   mygroup<-ungroup(mygroup)
   mygroup$group[mygroup$group %in% c(0,1,2)]<-0
   
-  pvalue<-test_wrapper(week,mygroup)
-  
+  res<-test_wrapper2(week,mygroup)
+  res[1]
 }
 
+## Table "Figure 2 details: monotonicity test results"
+## Column 3 and 4
+myres_M0<-as.data.frame(t(myres_M0))
+colnames(myres_M0)<-c("test","pvalue")
+mean(myres_M0$test[myres_M0<=0.05])
+mean(myres_M0[myres_M0<=0.05])
 
 myres_M1=foreach(week=80:108, .combine = 'cbind',.packages = c("tidyverse"))  %dopar% {
   ## constructed data for week
@@ -69,14 +75,20 @@ myres_M1=foreach(week=80:108, .combine = 'cbind',.packages = c("tidyverse"))  %d
   mygroup<-ungroup(mygroup)
   mygroup$group[mygroup$group %in% c(0,2,3)]<-0
   
-  pvalue<-test_wrapper(week,mygroup)
-  
+  res<-test_wrapper2(week,mygroup)
+  res[1]
 }
+
+myres_M1<-as.data.frame(t(myres_M1))
+colnames(myres_M1)<-c("test","pvalue")
+mean(myres_M1$test[myres_M1<=0.05])
+mean(myres_M1[myres_M1<=0.05])
+
 
 
 myres_M2=foreach(week=109:139, .combine = 'cbind',.packages = c("tidyverse"))  %dopar% {
   ## constructed data for week
- 
+  
   if (week<=111) {
     cov_names<-c("REASED_R4","WELF5AC")
     
@@ -92,23 +104,24 @@ myres_M2=foreach(week=109:139, .combine = 'cbind',.packages = c("tidyverse"))  %
     mygroup<-ungroup(mygroup)
   } else {
     
- 
-  cov_names<-c("EARN_YR_quant","R_HOME1","WELF5AC","TYPEWORR5")
- 
-  group_weight<-1:length(cov_names)
-  mygroup<-as.matrix(Lee_data_all_covariates[,cov_names])%*%group_weight
-  mygroup<-as.numeric(mygroup)
-  
-  mygroup<-group_by(data.frame(group=mygroup),group) %>%
-    count %>%
-    inner_join(data.frame(group=mygroup,MPRID=Lee_data$MPRID))
-  ## unite groups of size less than 30 into 1 group
-  mygroup$group[mygroup$n<=20]<-1
-  mygroup<-ungroup(mygroup)
-  mygroup$group[mygroup$group %in% c(0,1,2,7)]<-0
-  mygroup$group[mygroup$group %in% c(3,6)]<-3
+    
+    cov_names<-c("EARN_YR_quant","R_HOME1","WELF5AC","TYPEWORR5")
+    
+    group_weight<-1:length(cov_names)
+    mygroup<-as.matrix(Lee_data_all_covariates[,cov_names])%*%group_weight
+    mygroup<-as.numeric(mygroup)
+    
+    mygroup<-group_by(data.frame(group=mygroup),group) %>%
+      count %>%
+      inner_join(data.frame(group=mygroup,MPRID=Lee_data$MPRID))
+    ## unite groups of size less than 30 into 1 group
+    mygroup$group[mygroup$n<=20]<-1
+    mygroup<-ungroup(mygroup)
+    mygroup$group[mygroup$group %in% c(0,1,2,7)]<-0
+    mygroup$group[mygroup$group %in% c(3,6)]<-3
   }
-  pvalue<-test_wrapper(week,mygroup)
+  res<-test_wrapper2(week,mygroup)
+  res[1]
 }
 
 myres_M3=foreach(week=140:153, .combine = 'cbind',.packages = c("tidyverse"))  %dopar% {
@@ -125,10 +138,10 @@ myres_M3=foreach(week=140:153, .combine = 'cbind',.packages = c("tidyverse"))  %
   ## unite groups of size less than 30 into 1 group
   mygroup$group[mygroup$n<=20]<-1
   mygroup<-ungroup(mygroup)
- 
   
-  pvalue<-test_wrapper(week,mygroup)
   
+  res<-test_wrapper2(week,mygroup)
+  res[1]
 }
 
 
@@ -153,9 +166,9 @@ myres_M4=foreach(week=154:164, .combine = 'cbind',.packages = c("tidyverse"))  %
   if (week <=156) {
     mygroup$group[mygroup$group %in% c(1,3)]<-1
   }
-
-  pvalue<-test_wrapper(week,mygroup)
   
+  res<-test_wrapper2(week,mygroup)
+  res[1]
 }
 
 
@@ -175,8 +188,8 @@ myres_M5=foreach(week=165:180, .combine = 'cbind',.packages = c("tidyverse"))  %
   mygroup<-ungroup(mygroup)
   mygroup$group[mygroup$group %in% c(0,2,3)]<-0
   
-  pvalue<-test_wrapper(week,mygroup)
-  
+  res<-test_wrapper2(week,mygroup)
+  res[1]
 }
 
 myres_M6=foreach(week=181:208, .combine = 'cbind',.packages = c("tidyverse"))  %dopar% {
@@ -195,13 +208,13 @@ myres_M6=foreach(week=181:208, .combine = 'cbind',.packages = c("tidyverse"))  %
   mygroup<-ungroup(mygroup)
   mygroup$group[mygroup$group %in% c(0,1,2,3)]<-0
   
-  pvalue<-test_wrapper(week,mygroup)
-  
+  res<-test_wrapper2(week,mygroup)
+  res[1]
 }
 
 test_result<-data.frame(weeks=c(1:208),pvalue=rep(1,208))
-test_result$pvalue[60:79]<-as.numeric(myres_M0)
-test_result$pvalue[80:108]<-as.numeric(myres_M1)
+test_result$pvalue[60:79]<-as.numeric(myres_M0$V1)
+test_result$pvalue[80:108]<-as.numeric(myres_M1$V1)
 test_result$pvalue[109:139]<-as.numeric(myres_M2)
 test_result$pvalue[140:153]<-as.numeric(myres_M3)
 test_result$pvalue[154:164]<-as.numeric(myres_M4)

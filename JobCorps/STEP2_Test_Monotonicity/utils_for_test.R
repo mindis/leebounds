@@ -143,3 +143,42 @@ test_wrapper<-function(week,mygroup){
   
   return(pvalue)
 }
+
+
+test_wrapper2<-function(week,mygroup){
+  hwh_name<-paste0("HWH",week)
+  earn_name<-paste0("EARNH",week)
+  logwage_week<-as.numeric(as.matrix(log(Lee_data[,earn_name]/Lee_data[,hwh_name])))
+  logwage_week[is.na(logwage_week)]<-0
+  logwage_week[logwage_week==-Inf]<-0
+  
+  if (week>=90) {
+    leedata_cov<-data.frame(treat=1-Lee_data$TREATMNT.y,
+                            selection = logwage_week>0,
+                            MPRID=Lee_data$MPRID) %>%
+      inner_join(mygroup[,c("MPRID","group")],by= c("MPRID"="MPRID"))
+    
+  } else {
+    leedata_cov<-data.frame(treat=Lee_data$TREATMNT.y,
+                            selection = logwage_week>0,
+                            MPRID=Lee_data$MPRID) %>%
+      inner_join(mygroup[,c("MPRID","group")],by= c("MPRID"="MPRID"))
+    
+  }
+  ## created grouped data
+  grouped_data<-group_by(leedata_cov,group)
+  grouped_data<-do.call(rbind,group_map(grouped_data,compute_mean_sd,keep=TRUE))
+  
+  
+  ### compute test statistic
+  grouped_data<-group_by(grouped_data,group)
+  grouped_data_tstat<-grouped_data
+  grouped_data_tstat$MEAN<-0
+  tstat<-unlist(group_map(grouped_data_tstat,compute_tstat_by_group,sign=1,mean_name="MEAN",keep=TRUE))
+  max.t.stat<-max(max(tstat),0)
+  
+  res<-compute_crit_val2(grouped_data,tstat= max.t.stat,B=B,beta.N=beta.N)
+  pvalue<- res$pvalue
+  
+  return(c(max.t.stat, pvalue))
+}
